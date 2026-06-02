@@ -1,0 +1,2302 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Výživový deník</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0f0f14;
+  --bg2:     #16161e;
+  --bg3:     #1c1c26;
+  --white:   #1a1a24;
+  --border:  #2a2a3a;
+  --border2: #383848;
+  --green:   #4ade80;
+  --green-l: #0d2a18;
+  --green-m: #1a4a2e;
+  --blue:    #60a5fa;
+  --blue-l:  #0d1f3a;
+  --orange:  #fb923c;
+  --orange-l:#2a1500;
+  --red:     #f87171;
+  --red-l:   #2a0d0d;
+  --red-m:   #4a1a1a;
+  --purple:  #c084fc;
+  --text:    #f0f0f8;
+  --text2:   #b0b0c8;
+  --muted:   #606080;
+  --serif:   'DM Serif Display', Georgia, serif;
+  --sans:    'DM Sans', system-ui, sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;min-height:100vh;overflow-x:hidden}
+
+.app{max-width:1060px;margin:0 auto;padding:32px 18px 80px}
+
+/* HEADER */
+.hdr{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:28px;padding-bottom:22px;border-bottom:2px solid var(--border);flex-wrap:wrap}
+.hdr-title{font-family:var(--serif);font-size:clamp(32px,5vw,52px);line-height:.92;color:var(--text)}
+.hdr-title em{font-style:italic;color:var(--green)}
+.hdr-sub{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.hdr-badge{background:var(--white);border:1.5px solid var(--border);border-radius:16px;padding:13px 18px;text-align:right;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.hdr-badge .bd{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.hdr-badge .brow{display:flex;justify-content:flex-end;gap:18px;flex-wrap:wrap}
+.bstat{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
+.bstat .v{font-family:var(--serif);font-size:20px;line-height:1}
+.bstat .l{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+
+/* DATE BAR */
+.datebar{display:flex;align-items:center;gap:9px;margin-bottom:18px;flex-wrap:wrap}
+.datelbl{font-family:var(--serif);font-size:19px;flex:1;min-width:130px;color:var(--text2)}
+input[type="date"]{background:var(--white);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--sans);font-size:12px;font-weight:500;padding:7px 12px;outline:none;cursor:pointer;color-scheme:dark}
+input[type="date"]:focus{border-color:var(--green)}
+
+/* BUTTONS */
+.btn{background:var(--white);border:1.5px solid var(--border);border-radius:10px;color:var(--text2);font-family:var(--sans);font-size:11px;font-weight:600;padding:7px 13px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:var(--green);color:var(--green);background:var(--green-l)}
+.btn-g{background:var(--green);color:#fff;border-color:var(--green);font-weight:700}
+.btn-g:hover{background:#246330;border-color:#246330;color:#fff}
+.btn-del{color:var(--muted);border-color:var(--border2)}
+.btn-del:hover{color:var(--red);border-color:var(--red);background:var(--red-l)}
+
+/* DEFICIT BANNER */
+.banner{border-radius:18px;padding:18px 22px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;border:1.5px solid;transition:all .4s}
+.banner-empty{background:var(--bg2);border-color:var(--border);color:var(--muted)}
+.banner-deficit{background:var(--green-l);border-color:var(--green-m);color:var(--green)}
+.banner-big{background:#2a2000;border-color:#5a4500;color:#fbbf24}
+.banner-maint{background:var(--blue-l);border-color:#1e3a5a;color:var(--blue)}
+.banner-surplus{background:var(--red-l);border-color:var(--red-m);color:var(--red)}
+.bn-icon{font-size:38px;line-height:1;flex-shrink:0}
+.bn-main{flex:1;min-width:120px}
+.bn-tag{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px}
+.bn-num{font-family:var(--serif);font-size:42px;line-height:1;letter-spacing:-1px}
+.bn-sub{font-size:11px;font-weight:500;opacity:.75;margin-top:2px}
+.bn-stats{display:flex;gap:13px;flex-wrap:wrap}
+.bn-stat .v{font-family:var(--serif);font-size:18px;font-weight:400;line-height:1}
+.bn-stat .l{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;opacity:.6}
+
+/* KPI STRIP */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:16px}
+@media(max-width:640px){.kpis{grid-template-columns:repeat(3,1fr)}}
+.kpi{background:var(--white);border:1.5px solid var(--border);border-radius:13px;padding:13px 11px 11px;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.kpi .kl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.kpi .kv{font-family:var(--serif);font-size:26px;line-height:1;letter-spacing:-.5px}
+.kpi .ks{font-size:10px;color:var(--muted);margin-top:3px;font-weight:500}
+
+/* STEPS BAR */
+.steps-card{background:var(--white);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.sc-icon{font-size:24px;flex-shrink:0}
+.sc-info{flex:1;min-width:0}
+.sc-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-track{height:7px;background:var(--bg3);border-radius:5px;position:relative;margin-bottom:0}
+.sc-mark{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:var(--green);border-radius:2px;z-index:2}
+.sc-mark::after{content:'10k';position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;color:var(--green);white-space:nowrap}
+.sc-fill{height:100%;border-radius:5px;transition:width .6s ease}
+/* row 1: input + button */
+.sc-row1{display:flex;align-items:center;gap:8px;margin-top:10px}
+.sc-row1 input{flex:1;min-width:0}
+.sc-row1 button{flex-shrink:0;white-space:nowrap}
+/* row 2: kcal info */
+.sc-row2{display:flex;align-items:baseline;gap:8px;margin-top:6px;flex-wrap:wrap}
+.sc-kcal{font-family:var(--serif);font-size:16px;color:var(--orange);white-space:nowrap}
+.sc-bonus{font-size:10px;color:var(--green);font-weight:600;white-space:nowrap}
+
+/* JSON IMPORT MODAL */
+.json-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1100;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.json-modal-overlay.hidden{display:none}
+.json-modal{background:var(--bg2);border:1.5px solid var(--border2);border-radius:18px;padding:24px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.json-modal-title{font-family:var(--serif);font-size:20px;margin-bottom:6px;color:var(--text)}
+.json-modal-sub{font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6}
+.json-textarea{width:100%;min-height:160px;background:var(--bg3);border:1.5px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--mono, monospace);font-size:12px;padding:12px;outline:none;resize:vertical;transition:border-color .18s;line-height:1.5}
+.json-textarea:focus{border-color:var(--green)}
+.json-textarea::placeholder{color:var(--muted);font-family:var(--sans)}
+.json-preview{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.json-preview-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--text2);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.json-preview-name{font-weight:600;flex:1}
+.json-preview-kcal{font-family:var(--serif);font-size:16px;color:var(--green);flex-shrink:0}
+.json-err{font-size:11px;color:var(--red);font-weight:600;margin-top:8px;display:none}
+
+/* EDIT MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.modal-overlay.hidden{display:none}
+.modal{background:var(--bg2);border:1.5px solid var(--border2);border-radius:18px;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal-title{font-family:var(--serif);font-size:22px;margin-bottom:18px;color:var(--text)}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.modal-field{display:flex;flex-direction:column;gap:5px}
+.modal-field label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.modal-actions{display:flex;gap:8px;margin-top:16px}
+.modal-actions button{flex:1}
+
+/* TABS */
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:20px}
+.tab{padding:9px 15px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;user-select:none}
+.tab:hover{color:var(--text2)}
+.tab.on{color:var(--green);border-bottom-color:var(--green)}
+.tab-pane{display:none}
+.tab-pane.on{display:block;animation:fu .18s ease}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:640px){.g2{grid-template-columns:1fr}}
+
+/* CARDS */
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.ct{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+
+/* MACRO BARS */
+.mbars{display:flex;flex-direction:column;gap:12px}
+.mbar{display:flex;flex-direction:column;gap:4px}
+.mbar-top{display:flex;justify-content:space-between;font-size:11px;font-weight:500}
+.mbar-n{color:var(--muted)}
+.mbar-v{color:var(--text)}
+.mbar-track{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.mbar-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+
+/* PILL */
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border:1px solid}
+.pill-g{background:var(--green-l);color:var(--green);border-color:var(--green-m)}
+.pill-o{background:var(--orange-l);color:var(--orange);border-color:#f5cfa0}
+.pill-r{background:var(--red-l);color:var(--red);border-color:var(--red-m)}
+.pill-b{background:var(--blue-l);color:var(--blue);border-color:#b8d4f5}
+.pill-x{background:var(--bg2);color:var(--muted);border-color:var(--border2)}
+.pill-y{background:#2a2000;color:#fbbf24;border-color:#5a4500}
+
+/* FOOD ROWS */
+.meal-sec{margin-bottom:16px}
+.meal-hdr{display:flex;justify-content:space-between;align-items:center;padding:5px 0 8px;border-bottom:1.5px solid var(--border);margin-bottom:7px}
+.meal-hdr-n{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.meal-hdr-k{font-family:var(--serif);font-size:15px;color:var(--orange)}
+.food-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border-radius:10px;background:var(--bg);border:1.5px solid var(--border);margin-bottom:5px;transition:border-color .15s}
+.food-row:hover{border-color:var(--border2)}
+.fr-left{flex:1;min-width:0}
+.fr-name{font-size:13px;font-weight:500;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr-note{color:var(--muted);font-size:10px;margin-left:5px}
+.fr-macros{display:flex;gap:9px;font-size:10px;font-weight:600;flex-wrap:wrap}
+.fr-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.fr-kcal{font-family:var(--serif);font-size:18px}
+.fr-kcal span{font-family:var(--sans);font-size:9px;color:var(--muted);margin-left:2px}
+
+/* ACT ROWS */
+.act-row{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;background:var(--bg);border:1.5px solid var(--border);margin-bottom:7px}
+.act-ico{font-size:20px;flex-shrink:0}
+.act-info{flex:1}
+.act-name{font-size:13px;font-weight:500}
+.act-det{font-size:10px;color:var(--muted);margin-top:2px}
+.act-kcal{font-family:var(--serif);font-size:18px;color:var(--blue);white-space:nowrap}
+
+/* INP */
+.inp{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--sans);font-size:13px;font-weight:500;padding:8px 11px;outline:none;transition:border-color .18s}
+.inp:focus{border-color:var(--green);background:var(--white)}
+.inp::placeholder{color:var(--muted);font-weight:400}
+select.inp{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:28px}
+
+/* BALANCE GRID */
+.bal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.bal-box{background:var(--bg);border:1.5px solid var(--border);border-radius:11px;padding:12px}
+.bal-box .v{font-family:var(--serif);font-size:19px;margin-bottom:3px;line-height:1}
+.bal-box .l{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+
+/* CHART */
+.chart-box{position:relative;height:170px;margin-top:6px}
+/* Fix balance chart: wrapper with overflow for negative bars */
+.chart-bal-wrap{position:relative;height:180px;margin-top:6px}
+
+/* IB GRID */
+/* MÍRY TAB */
+.miry-form{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+@media(max-width:600px){.miry-form{grid-template-columns:repeat(2,1fr)}}
+.miry-field{display:flex;flex-direction:column;gap:6px}
+.miry-field label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+.miry-field .unit{font-size:10px;color:var(--muted);font-weight:500;margin-top:2px}
+.miry-row{display:flex;align-items:center;gap:0;padding:11px 0;border-bottom:1px solid var(--border)}
+.miry-row:last-child{border-bottom:none}
+.miry-row-date{font-size:12px;font-weight:600;color:var(--text2);min-width:110px}
+.miry-row-vals{display:flex;gap:20px;flex:1;flex-wrap:wrap}
+.miry-val{display:flex;flex-direction:column;gap:1px;min-width:60px}
+.miry-val .mv{font-family:var(--serif);font-size:19px;line-height:1}
+.miry-val .ml{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.miry-val .md{font-size:10px;font-weight:600;margin-top:1px}
+.miry-chart-wrap{height:160px;margin-top:8px}
+
+/* INBODY ROW LAYOUT */
+.ib-date{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.ib-date-label{font-family:var(--serif);font-size:22px;color:var(--text)}
+.ib-score{font-family:var(--serif);font-size:28px;color:var(--orange)}
+.ib-score-label{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.ib-main{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}@media(max-width:500px){.ib-main{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.ib-main{grid-template-columns:repeat(2,1fr)}}
+.ib-stat{display:flex;flex-direction:column;gap:3px}
+.ib-stat .iv{font-family:var(--serif);font-size:32px;line-height:1;letter-spacing:-1px}
+.ib-stat .il{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.ib-stat .ic{font-size:11px;font-weight:600;margin-top:1px}
+.ib-extra{display:flex;gap:8px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border)}
+.ib-pill{display:flex;align-items:center;gap:6px;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:7px 12px}
+.ib-pill .pv{font-family:var(--serif);font-size:16px;line-height:1}
+.ib-pill .pl{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+
+/* GOALS */
+.goal-list{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.goal-row{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text2);font-weight:500}
+.gdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* EMPTY */
+.empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:12px;font-weight:500;border:1.5px dashed var(--border2);border-radius:12px}
+.empty .ei{font-size:26px;display:block;margin-bottom:8px;opacity:.5}
+
+/* DIVIDER */
+.div{height:1px;background:var(--border);margin:14px 0}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+@media(max-width:600px){
+  .hdr{flex-direction:column;align-items:flex-start}
+  .hdr-badge{text-align:left}
+  .hdr-badge .brow{justify-content:flex-start}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .g2{grid-template-columns:1fr}
+  .steps-card{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <div class="hdr-title">výživový<br><em>deník</em></div>
+    
+  </div>
+  <div class="hdr-badge">
+    <div class="bd">InBody · 11.05.2026</div>
+    <div class="brow">
+      <div class="bstat"><div class="v">83,7</div><div class="l">Váha kg</div></div>
+      <div class="bstat"><div class="v" style="color:var(--red)">41,6%</div><div class="l">Tuk</div></div>
+      <div class="bstat"><div class="v" style="color:var(--blue)">27,1</div><div class="l">Svaly kg</div></div>
+      <div class="bstat"><div class="v" style="color:var(--green)">1 426</div><div class="l">BMR kcal</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- DATE BAR -->
+<div class="datebar">
+  <div class="datelbl" id="dateLbl">—</div>
+  <input type="date" id="dateInput">
+  <button class="btn" onclick="prevDay()">← předchozí</button>
+  <button class="btn" onclick="nextDay()">následující →</button>
+  <button class="btn btn-g" onclick="saveDay(this)">💾 uložit</button>
+  <button class="btn btn-del" onclick="clearDay()">✕ smazat den</button>
+</div>
+
+<!-- DEFICIT BANNER -->
+<div class="banner banner-empty" id="banner">
+  <div class="bn-icon" id="bnIcon">📋</div>
+  <div class="bn-main">
+    <div class="bn-tag" id="bnTag">Zatím bez záznamu</div>
+    <div class="bn-num" id="bnNum">—</div>
+    <div class="bn-sub" id="bnSub">Přidej jídla pro výpočet kalorické bilance</div>
+  </div>
+  <div class="bn-stats">
+    <div class="bn-stat"><div class="v" id="bnBurn">—</div><div class="l">Výdej</div></div>
+    <div class="bn-stat"><div class="v" id="bnIntake">—</div><div class="l">Příjem</div></div>
+    <div class="bn-stat"><div class="v" id="bnBonus">—</div><div class="l">Bonus kroky</div></div>
+  </div>
+</div>
+
+<!-- KPI STRIP -->
+<div class="kpis">
+  <div class="kpi"><div class="kl">Přijato kcal</div><div class="kv" id="kK" style="color:var(--green)">0</div><div class="ks">cíl: 1 750 kcal</div></div>
+  <div class="kpi"><div class="kl">Bílkoviny</div><div class="kv" id="kP" style="color:var(--blue)">0g</div><div class="ks">min. 130g</div></div>
+  <div class="kpi"><div class="kl">Sacharidy</div><div class="kv" id="kC" style="color:var(--orange)">0g</div><div class="ks">130–160g</div></div>
+  <div class="kpi"><div class="kl">Tuky</div><div class="kv" id="kF" style="color:var(--purple)">0g</div><div class="ks">45–60g</div></div>
+  <div class="kpi"><div class="kl">Zbývá kcal</div><div class="kv" id="kR" style="color:var(--text2)">—</div><div class="ks" id="kRs">do cíle</div></div>
+</div>
+
+<!-- STEPS -->
+<div class="steps-card">
+  <div class="sc-icon">👟</div>
+  <div class="sc-info" style="flex:1;min-width:0">
+    <div class="sc-lbl">Kroky — 10 000 je v základním výdeji</div>
+    <div class="sc-track">
+      <div class="sc-mark"></div>
+      <div class="sc-fill" id="scFill" style="width:0%"></div>
+    </div>
+    <div class="sc-row1">
+      <input class="inp" id="stepsInp" type="number" min="0" max="50000" placeholder="počet kroků" oninput="onStepsLive()">
+      <button class="btn btn-g" onclick="saveSteps()">Uložit</button>
+    </div>
+    <div class="sc-row2">
+      <div class="sc-kcal">≈ <span id="slKcal">0</span> kcal celkem</div>
+      <div class="sc-bonus" id="slBonus" style="display:none">· +<span id="slBonusVal">0</span> kcal bonus nad 10k</div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab on" onclick="setTab('jidlo')">🍽 Jídlo</div>
+  <div class="tab" onclick="setTab('aktivita')">🏃 Aktivita</div>
+  <div class="tab" onclick="setTab('prehled')">📊 Přehled</div>
+  <div class="tab" onclick="setTab('inbody')">💪 InBody</div>
+  <div class="tab" onclick="setTab('miry')">📏 Míry</div>
+  <div class="tab" onclick="setTab('nastaveni')">⚙️ Nastavení</div>
+</div>
+
+<!-- TAB JÍDLO -->
+<div id="tab-jidlo" class="tab-pane on">
+  <div class="g2">
+    <div class="card">
+      <div class="ch">
+        <div class="ct">Makra dne</div>
+        <div id="macroPill" class="pill pill-x">Bez záznamu</div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:2px">Celkem kcal</div>
+          <div style="font-family:var(--serif);font-size:50px;line-height:1;letter-spacing:-2px;color:var(--green)" id="bigKcal">0</div>
+        </div>
+        <div style="display:flex;gap:13px;padding-bottom:4px">
+          <div><div style="font-family:var(--serif);font-size:20px;color:var(--blue)" id="mP">0g</div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--muted)">Bílkoviny</div></div>
+          <div><div style="font-family:var(--serif);font-size:20px;color:var(--orange)" id="mC">0g</div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--muted)">Sacharidy</div></div>
+          <div><div style="font-family:var(--serif);font-size:20px;color:var(--purple)" id="mF">0g</div><div style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--muted)">Tuky</div></div>
+        </div>
+      </div>
+      <div class="mbars">
+        <div class="mbar"><div class="mbar-top"><span class="mbar-n">BÍLKOVINY</span><span class="mbar-v"><span id="bP">0</span> / 130g</span></div><div class="mbar-track"><div class="mbar-fill" id="barP" style="width:0%;background:var(--blue)"></div></div></div>
+        <div class="mbar"><div class="mbar-top"><span class="mbar-n">SACHARIDY</span><span class="mbar-v"><span id="bC">0</span> / 160g</span></div><div class="mbar-track"><div class="mbar-fill" id="barC" style="width:0%;background:var(--orange)"></div></div></div>
+        <div class="mbar"><div class="mbar-top"><span class="mbar-n">TUKY</span><span class="mbar-v"><span id="bF">0</span> / 55g</span></div><div class="mbar-track"><div class="mbar-fill" id="barF" style="width:0%;background:var(--purple)"></div></div></div>
+        <div class="mbar"><div class="mbar-top"><span class="mbar-n">KALORIE</span><span class="mbar-v"><span id="bK">0</span> / 1 750 kcal</span></div><div class="mbar-track"><div class="mbar-fill" id="barK" style="width:0%;background:var(--green)"></div></div></div>
+      </div>
+      <div class="div"></div>
+      <div class="goal-list">
+        <div class="goal-row"><div class="gdot" style="background:var(--green)"></div>Cíl: 1 600–1 800 kcal/den</div>
+        <div class="goal-row"><div class="gdot" style="background:var(--blue)"></div>Bílkoviny: min. 130 g/den</div>
+        <div class="goal-row"><div class="gdot" style="background:var(--orange)"></div>Sacharidy: 130–160 g/den</div>
+        <div class="goal-row"><div class="gdot" style="background:var(--purple)"></div>Tuky: 45–60 g/den</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch">
+        <div class="ct">Přidat jídlo</div>
+        <button class="btn" onclick="openJsonModal()" style="font-size:11px;color:var(--green);border-color:var(--green);padding:5px 11px">📋 Vložit od Claude</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <input class="inp" id="fName" placeholder="Název jídla / potraviny..." style="width:100%">
+        <select class="inp" id="fMeal" style="width:100%">
+          <option>Snídaně</option><option>Dopolední svačina</option><option selected>Oběd</option><option>Odpolední svačina</option><option>Večeře</option><option>Nápoj / jiné</option>
+        </select>
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <input class="inp" id="fKcal" type="number" min="0" placeholder="kcal" style="flex:1;min-width:55px">
+          <input class="inp" id="fProt" type="number" min="0" placeholder="bílk.g" style="flex:1;min-width:55px">
+          <input class="inp" id="fCarb" type="number" min="0" placeholder="sach.g" style="flex:1;min-width:55px">
+          <input class="inp" id="fFat"  type="number" min="0" placeholder="tuky g" style="flex:1;min-width:55px">
+        </div>
+        <div style="display:flex;align-items:center;gap:5px">
+          <span style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase">Hodnocení:</span>
+          <span id="stars" style="font-size:20px;cursor:pointer"></span>
+        </div>
+        <input class="inp" id="fNote" placeholder="Poznámka..." style="width:100%">
+        <div id="fErr" style="font-size:11px;color:var(--red);font-weight:600;display:none"></div>
+        <button class="btn btn-g" onclick="addFood()" style="width:100%">+ Přidat jídlo</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct" style="margin-bottom:12px">Záznam jídla</div>
+    <div id="foodLog"><div class="empty"><span class="ei">🍽</span>Zatím žádné záznamy.</div></div>
+  </div>
+</div>
+
+<!-- TAB AKTIVITA -->
+<div id="tab-aktivita" class="tab-pane">
+  <div class="g2">
+    <div class="card">
+      <div class="ct" style="margin-bottom:14px">Přidat aktivitu</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <select class="inp" id="actType" style="width:100%">
+          <option>🏋️ Silový trénink</option><option>🏃 Kardio / běh</option><option>🚶 Chůze</option>
+          <option>🚴 Kolo / spinning</option><option>🏊 Plavání</option><option>🧘 Yoga / pilates</option>
+          <option>💃 Tanec</option><option>🎾 Squash / raketové sporty</option><option>⚡ Jiné</option>
+        </select>
+        <div style="display:flex;gap:8px">
+          <input class="inp" id="actMin" type="number" min="0" placeholder="minuty" style="flex:1">
+          <input class="inp" id="actKcal" type="number" min="0" placeholder="kcal" style="flex:1">
+        </div>
+        <input class="inp" id="actNote" placeholder="Poznámka..." style="width:100%">
+        <button class="btn btn-g" onclick="addAct()" style="width:100%">+ Přidat aktivitu</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch">
+        <div class="ct">Bilance dne</div>
+        <div id="balPill" class="pill pill-x">—</div>
+      </div>
+      <div style="font-family:var(--serif);font-size:48px;line-height:1;letter-spacing:-2px" id="balBig">—</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;margin-bottom:2px">kcal bilance dne</div>
+      <div class="bal-grid">
+        <div class="bal-box"><div class="v" id="b1">2 111</div><div class="l">Základ výdej</div></div>
+        <div class="bal-box"><div class="v" style="color:var(--blue)" id="b2">0</div><div class="l">Sport kcal</div></div>
+        <div class="bal-box"><div class="v" style="color:var(--orange)" id="b3">0</div><div class="l">Bonus kroky</div></div>
+        <div class="bal-box"><div class="v" style="color:var(--green)" id="b4">0</div><div class="l">Příjem kcal</div></div>
+        <div class="bal-box"><div class="v" id="b5">—</div><div class="l">Výdej celkem</div></div>
+        <div class="bal-box"><div class="v" id="b6">—</div><div class="l">Bilance</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="ct" style="margin-bottom:12px">Záznamy aktivit</div>
+    <div id="actLog"><div class="empty"><span class="ei">🏃</span>Zatím žádné aktivity.</div></div>
+  </div>
+</div>
+
+<!-- TAB PŘEHLED -->
+<div id="tab-prehled" class="tab-pane">
+  <div style="display:flex;gap:7px;margin-bottom:14px;align-items:center">
+    <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);flex:1">Zobrazit:</span>
+    <button id="btnP7"  class="btn btn-g" onclick="setPeriod(7)"  style="padding:6px 16px;font-size:11px">7 dní</button>
+    <button id="btnP30" class="btn"       onclick="setPeriod(30)" style="padding:6px 16px;font-size:11px">30 dní</button>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ch"><div class="ct" id="lblKcal">Kalorie — 7 dní</div></div><div class="chart-box"><canvas id="cKcal"></canvas></div></div>
+    <div class="card"><div class="ch"><div class="ct" id="lblProt">Bílkoviny — 7 dní</div></div><div class="chart-box"><canvas id="cProt"></canvas></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ch"><div class="ct" id="lblBal">Bilance — 7 dní</div><div style="font-size:10px;color:var(--muted)">zelená = deficit, modrá = udržovací, červená = přebytek</div></div><div class="chart-bal-wrap"><canvas id="cBal"></canvas></div></div>
+    <div class="card"><div class="ch"><div class="ct" id="lblSteps">Kroky — 7 dní</div></div><div class="chart-box"><canvas id="cSteps"></canvas></div></div>
+  </div>
+</div>
+
+<!-- TAB INBODY -->
+<div id="tab-inbody" class="tab-pane">
+
+  <!-- CURRENT GOALS — vždy nahoře, kompaktní -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="ct" style="margin-bottom:12px">⚡ Aktuální cíle</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div class="bal-box"><div class="v" id="ibcBmr" style="color:var(--orange)">1 426</div><div class="l">BMR kcal</div></div>
+      <div class="bal-box"><div class="v" id="ibcBurn" style="color:var(--text2)">2 111</div><div class="l">Základ výdej</div></div>
+      <div class="bal-box"><div class="v" id="ibcKcal" style="color:var(--green)">1 750</div><div class="l">Kcal cíl / den</div></div>
+      <div class="bal-box"><div class="v" id="ibcProt" style="color:var(--blue)">130g</div><div class="l">Protein cíl</div></div>
+      <div class="bal-box"><div class="v" id="ibcDeficit" style="color:var(--red)">—</div><div class="l">Deficit / den</div></div>
+      <div class="bal-box" style="background:var(--bg3)"><div style="font-size:9px;color:var(--muted);line-height:1.6">Přepočítá se<br>po novém InBody</div></div>
+    </div>
+  </div>
+
+  <!-- ADD NEW INBODY FORM — collapsible -->
+  <div class="card" style="margin-bottom:14px;border-left:4px solid var(--blue)">
+    <div class="ch" style="cursor:pointer;user-select:none" onclick="toggleIbForm()">
+      <div class="ct">➕ Přidat nové InBody měření</div>
+      <div id="ibFormToggleIcon" style="font-size:18px;color:var(--muted)">﹢</div>
+    </div>
+    <div id="ibFormBody" style="display:none">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:12px">BMR je povinné — najdeš ho na InBody výsledku vpravo dole</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px">
+        <div style="display:flex;flex-direction:column;gap:5px;grid-column:span 2">
+          <label style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">📅 Datum měření</label>
+          <input class="inp" type="date" id="ibDate" style="width:100%;color-scheme:dark">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <label style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">⚖️ Váha (kg)</label>
+          <input class="inp" type="number" step="0.1" id="ibVaha" placeholder="83.7">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <label style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">🔥 BMR (kcal) *</label>
+          <input class="inp" type="number" step="1" id="ibBmr" placeholder="1426">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <label style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">🔴 Tuk (kg)</label>
+          <input class="inp" type="number" step="0.1" id="ibTuk" placeholder="34.8">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <label style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">% Tuku</label>
+          <input class="inp" type="number" step="0.1" id="ibPctTuk" placeholder="41.6">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <label style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">💪 Svaly (kg)</label>
+          <input class="inp" type="number" step="0.1" id="ibSvaly" placeholder="27.1">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <label style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">📊 BMI</label>
+          <input class="inp" type="number" step="0.1" id="ibBmi" placeholder="29.0">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <label style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">🫀 Viscerální tuk</label>
+          <input class="inp" type="number" step="1" id="ibVisc" placeholder="17">
+        </div>
+      </div>
+      <div id="ibFormErr" style="font-size:11px;color:var(--red);font-weight:600;display:none;margin-bottom:8px"></div>
+      <div id="ibPreview" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Přepočítané cíle:</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div><div style="font-family:var(--serif);font-size:18px;color:var(--text)" id="ibPrevBurn">—</div><div style="font-size:9px;color:var(--muted)">Základ výdej</div></div>
+          <div><div style="font-family:var(--serif);font-size:18px;color:var(--green)" id="ibPrevKcal">—</div><div style="font-size:9px;color:var(--muted)">Kcal cíl</div></div>
+          <div><div style="font-family:var(--serif);font-size:18px;color:var(--blue)" id="ibPrevProt">—</div><div style="font-size:9px;color:var(--muted)">Protein cíl</div></div>
+        </div>
+      </div>
+      <button class="btn btn-g" onclick="saveNewInbody()" style="width:100%">💾 Uložit nové InBody</button>
+    </div>
+  </div>
+
+  <!-- HISTORY LIST -->
+  <div style="display:flex;flex-direction:column;gap:14px" id="ibHistoryList">
+    <div id="ibEmptyMsg" class="empty" style="display:none"><span class="ei">📋</span>Zatím žádná InBody měření.</div>
+  </div>
+
+  <!-- TREND CHARTS -->
+  <div style="display:flex;flex-direction:column;gap:14px;margin-top:14px">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--text2);flex-shrink:0"></div>
+        <div class="ct">Váha kg</div>
+        <div style="font-size:10px;color:var(--muted);margin-left:auto">cíl: 63,5 kg</div>
+      </div>
+      <canvas id="cIbVaha" height="110"></canvas>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0"></div>
+        <div class="ct">Tuk kg &amp; % tuku</div>
+        <div style="font-size:10px;color:var(--muted);margin-left:auto">chceš snižovat ↓</div>
+      </div>
+      <canvas id="cIbTuk" height="110"></canvas>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="width:10px;height:10px;border-radius:50%;background:var(--blue);flex-shrink:0"></div>
+        <div class="ct">Svalová hmota kg</div>
+        <div style="font-size:10px;color:var(--muted);margin-left:auto">chceš udržet nebo zvyšovat ↑</div>
+      </div>
+      <canvas id="cIbSvaly" height="110"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<!-- TAB MÍRY -->
+<div id="tab-miry" class="tab-pane">
+
+  <!-- FORM -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="ch">
+      <div class="ct">Zaznamenat míry</div>
+      <div style="font-size:10px;color:var(--muted)">datum se uloží automaticky</div>
+    </div>
+    <div class="miry-form">
+      <div class="miry-field">
+        <label>⚖️ Váha</label>
+        <input class="inp" id="mVaha" type="number" step="0.1" min="30" max="200" placeholder="např. 83.5">
+        <span class="unit">kg</span>
+      </div>
+      <div class="miry-field">
+        <label>📏 Pas</label>
+        <input class="inp" id="mPas" type="number" step="0.5" min="40" max="200" placeholder="např. 92">
+        <span class="unit">cm</span>
+      </div>
+      <div class="miry-field">
+        <label>📏 Boky</label>
+        <input class="inp" id="mBoky" type="number" step="0.5" min="50" max="200" placeholder="např. 108">
+        <span class="unit">cm</span>
+      </div>
+      <div class="miry-field">
+        <label>📏 Stehna</label>
+        <input class="inp" id="mStehna" type="number" step="0.5" min="30" max="120" placeholder="např. 65">
+        <span class="unit">cm — jedno stehno</span>
+      </div>
+      <div class="miry-field">
+        <label>💪 Biceps</label>
+        <input class="inp" id="mRuka" type="number" step="0.5" min="15" max="60" placeholder="např. 32">
+        <span class="unit">cm — flexovaný</span>
+      </div>
+    </div>
+    <div id="miryErr" style="font-size:11px;color:var(--red);font-weight:600;display:none;margin-bottom:10px"></div>
+    <button class="btn btn-g" onclick="saveMiry()" style="width:100%">💾 Uložit míry</button>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="ct" style="margin-bottom:14px">Historie měření</div>
+    <div id="miryLog"><div class="empty"><span class="ei">📏</span>Zatím žádná měření.<br>Zadej první míry výše.</div></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="g2">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+        <div style="width:12px;height:12px;border-radius:50%;background:#333;flex-shrink:0"></div>
+        <div class="ct">Váha kg</div>
+      </div>
+      <div class="miry-chart-wrap"><canvas id="cMVaha"></canvas></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+        <div style="width:12px;height:12px;border-radius:50%;background:var(--orange);flex-shrink:0"></div>
+        <div class="ct">Pas cm</div>
+      </div>
+      <div class="miry-chart-wrap"><canvas id="cMPas"></canvas></div>
+    </div>
+  </div>
+  <div class="g2" style="margin-top:14px">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+        <div style="width:12px;height:12px;border-radius:50%;background:var(--purple);flex-shrink:0"></div>
+        <div class="ct">Boky cm</div>
+      </div>
+      <div class="miry-chart-wrap"><canvas id="cMBoky"></canvas></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+        <div style="width:12px;height:12px;border-radius:50%;background:var(--blue);flex-shrink:0"></div>
+        <div class="ct">Stehno cm</div>
+      </div>
+      <div class="miry-chart-wrap"><canvas id="cMStehna"></canvas></div>
+    </div>
+  </div>
+  <div class="g2" style="margin-top:14px">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:3px">
+        <div style="width:12px;height:12px;border-radius:50%;background:var(--green);flex-shrink:0"></div>
+        <div class="ct">Biceps cm</div>
+      </div>
+      <div class="miry-chart-wrap"><canvas id="cMRuka"></canvas></div>
+    </div>
+    <div class="card" style="background:var(--bg3);border-style:dashed;display:flex;align-items:center;justify-content:center">
+      <div style="text-align:center;color:var(--muted);font-size:12px;padding:20px">
+        <div style="font-size:28px;margin-bottom:8px;opacity:.4">📏</div>
+        Další míry<br>přidáme kdykoliv
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- EDIT FOOD MODAL -->
+<div class="modal-overlay hidden" id="editModal" onclick="closeEditModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">✏️ Upravit jídlo</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="modal-field" style="grid-column:span 2">
+        <label>Název</label>
+        <input class="inp" id="eName" style="width:100%" placeholder="Název jídla">
+      </div>
+      <div class="modal-field">
+        <label>Chod</label>
+        <select class="inp" id="eMeal" style="width:100%">
+          <option>Snídaně</option><option>Dopolední svačina</option><option>Oběd</option>
+          <option>Odpolední svačina</option><option>Večeře</option><option>Nápoj / jiné</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>Poznámka</label>
+        <input class="inp" id="eNote" style="width:100%" placeholder="volitelné...">
+      </div>
+    </div>
+    <div class="modal-grid" style="margin-top:10px">
+      <div class="modal-field">
+        <label>Kalorie (kcal)</label>
+        <input class="inp" id="eKcal" type="number" min="0" style="width:100%">
+      </div>
+      <div class="modal-field">
+        <label>Bílkoviny (g)</label>
+        <input class="inp" id="eProt" type="number" min="0" step="0.1" style="width:100%">
+      </div>
+      <div class="modal-field">
+        <label>Sacharidy (g)</label>
+        <input class="inp" id="eCarb" type="number" min="0" step="0.1" style="width:100%">
+      </div>
+      <div class="modal-field">
+        <label>Tuky (g)</label>
+        <input class="inp" id="eFat" type="number" min="0" step="0.1" style="width:100%">
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+      <span style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase">Hodnocení:</span>
+      <span id="eStars" style="font-size:20px;cursor:pointer"></span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeEditModal()">Zrušit</button>
+      <button class="btn btn-g" onclick="saveEdit()">💾 Uložit změny</button>
+    </div>
+  </div>
+</div>
+
+<!-- JSON IMPORT MODAL -->
+<!-- TAB NASTAVENÍ -->
+<div id="tab-nastaveni" class="tab-pane">
+
+  <div class="card" style="margin-bottom:14px;border-left:4px solid var(--purple)">
+    <div class="ct" style="margin-bottom:16px">👤 Profil</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px">
+
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">🎂 Věk (roky)</label>
+        <input class="inp" type="number" id="setVek" min="10" max="100" placeholder="27">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <label style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">📐 Výška (cm)</label>
+        <input class="inp" type="number" id="setVyska" min="100" max="250" placeholder="170">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:5px;grid-column:span 2">
+        <label style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">⚧ Pohlaví</label>
+        <div style="display:flex;gap:8px">
+          <button id="setPhlZena" class="btn" onclick="selectPohlavi('zena')" style="flex:1">👩 Žena</button>
+          <button id="setPhlMuz" class="btn" onclick="selectPohlavi('muz')" style="flex:1">👨 Muž</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CÍL -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">🎯 Cíl</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <button id="cilBtn0" class="btn cil-btn" onclick="selectCil(0)" style="text-align:left;padding:10px 14px">
+          <div style="font-weight:700;font-size:12px">🔥 Zhubnout tuk, udržet svaly</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Kalorický deficit ~350 kcal · Protein min. 1,8g / kg svalů</div>
+        </button>
+        <button id="cilBtn1" class="btn cil-btn" onclick="selectCil(1)" style="text-align:left;padding:10px 14px">
+          <div style="font-weight:700;font-size:12px">💪 Zhubnout tuk + nabrat svaly (rekomp)</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Malý deficit ~150 kcal · Protein min. 2,0g / kg svalů</div>
+        </button>
+        <button id="cilBtn2" class="btn cil-btn" onclick="selectCil(2)" style="text-align:left;padding:10px 14px">
+          <div style="font-weight:700;font-size:12px">🏋️ Nabrat svaly (bulk)</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Malý přebytek +200 kcal · Protein min. 2,0g / kg svalů</div>
+        </button>
+        <button id="cilBtn3" class="btn cil-btn" onclick="selectCil(3)" style="text-align:left;padding:10px 14px">
+          <div style="font-weight:700;font-size:12px">⚖️ Udržet váhu</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Udržovací kcal · Protein min. 1,6g / kg svalů</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- DENNÍ KROKY -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">🚶 Průměrný počet kroků / den</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button id="krkBtn0" class="btn krk-btn" onclick="selectKroky(0)" style="flex:1;min-width:70px">
+          <div style="font-weight:700">~3 000</div><div style="font-size:9px;color:var(--muted)">sedavý</div>
+        </button>
+        <button id="krkBtn1" class="btn krk-btn" onclick="selectKroky(1)" style="flex:1;min-width:70px">
+          <div style="font-weight:700">~6 000</div><div style="font-size:9px;color:var(--muted)">mírně aktivní</div>
+        </button>
+        <button id="krkBtn2" class="btn krk-btn" onclick="selectKroky(2)" style="flex:1;min-width:70px">
+          <div style="font-weight:700">~10 000</div><div style="font-size:9px;color:var(--muted)">aktivní</div>
+        </button>
+        <button id="krkBtn3" class="btn krk-btn" onclick="selectKroky(3)" style="flex:1;min-width:70px">
+          <div style="font-weight:700">~15 000</div><div style="font-size:9px;color:var(--muted)">velmi aktivní</div>
+        </button>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:7px;line-height:1.6">Kroky nad 10 000 se přičítají jako bonus každý den. Toto nastavení určuje tvůj <em>základní</em> výdej.</div>
+    </div>
+
+    <!-- AKTIVITA -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px">🏋️ Úroveň aktivity (mimo kroky)</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5">Jak často a intenzivně cvičíš? Tohle určuje PAL koeficient — násobí se s BMR a dává základ výdeje.</div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <button id="aktBtn0" class="btn akt-btn" onclick="selectAktivita(0)" style="text-align:left;padding:10px 14px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-weight:700;font-size:12px">🪑 Sedavý</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Kancelář, minimum pohybu, žádné sporty</div></div>
+            <div style="font-family:var(--serif);font-size:15px;color:var(--muted);flex-shrink:0;margin-left:8px">× 1,2</div>
+          </div>
+        </button>
+        <button id="aktBtn1" class="btn akt-btn" onclick="selectAktivita(1)" style="text-align:left;padding:10px 14px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-weight:700;font-size:12px">🚶 Lehce aktivní</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Sport 1–2× týdně nebo aktivní zaměstnání</div></div>
+            <div style="font-family:var(--serif);font-size:15px;color:var(--muted);flex-shrink:0;margin-left:8px">× 1,375</div>
+          </div>
+        </button>
+        <button id="aktBtn2" class="btn akt-btn" onclick="selectAktivita(2)" style="text-align:left;padding:10px 14px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-weight:700;font-size:12px">🏃 Středně aktivní</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Sport 3–5× týdně, středně intenzivní</div></div>
+            <div style="font-family:var(--serif);font-size:15px;color:var(--muted);flex-shrink:0;margin-left:8px">× 1,55</div>
+          </div>
+        </button>
+        <button id="aktBtn3" class="btn akt-btn" onclick="selectAktivita(3)" style="text-align:left;padding:10px 14px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-weight:700;font-size:12px">💪 Velmi aktivní</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Tvrdý trénink 6–7× týdně</div></div>
+            <div style="font-family:var(--serif);font-size:15px;color:var(--muted);flex-shrink:0;margin-left:8px">× 1,725</div>
+          </div>
+        </button>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6;background:var(--bg3);border-radius:8px;padding:8px 10px">
+        💡 <strong>Jak to funguje:</strong> Základ výdej = BMR × PAL + bonus kroky. Sporty přidané v záložce Aktivity se přičítají navíc každý den zvlášť.
+      </div>
+    </div>
+
+    <div id="setPreview" style="display:none;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">📊 Výpočet cílů:</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
+        <div class="bal-box"><div style="font-family:var(--serif);font-size:18px;color:var(--orange)" id="setPreviewBmr">—</div><div style="font-size:9px;color:var(--muted)">BMR kcal</div></div>
+        <div class="bal-box"><div style="font-family:var(--serif);font-size:18px;color:var(--text2)" id="setPreviewBurn">—</div><div style="font-size:9px;color:var(--muted)">Základ výdej</div></div>
+        <div class="bal-box"><div style="font-family:var(--serif);font-size:18px;color:var(--green)" id="setPreviewKcal">—</div><div style="font-size:9px;color:var(--muted)">Kcal cíl / den</div></div>
+        <div class="bal-box"><div style="font-family:var(--serif);font-size:18px;color:var(--blue)" id="setPreviewProt">—</div><div style="font-size:9px;color:var(--muted)">Protein cíl</div></div>
+        <div class="bal-box"><div style="font-family:var(--serif);font-size:18px;color:var(--red)" id="setPreviewDef">—</div><div style="font-size:9px;color:var(--muted)">Deficit / přebytek</div></div>
+        <div class="bal-box" style="background:var(--bg3)"><div style="font-size:9px;color:var(--muted);line-height:1.6">InBody BMR<br>má přednost</div></div>
+      </div>
+    </div>
+    <div id="setErr" style="font-size:11px;color:var(--red);font-weight:600;display:none;margin-bottom:8px"></div>
+    <button class="btn btn-g" onclick="saveNastaveni()" style="width:100%">💾 Uložit nastavení</button>
+    <div id="setOk" style="font-size:11px;color:var(--green);font-weight:600;display:none;margin-top:8px;text-align:center">✓ Uloženo!</div>
+  </div>
+
+  <div class="card" style="border-left:4px solid var(--orange)">
+    <div class="ct" style="margin-bottom:12px">💾 Záloha dat</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="exportData()" style="flex:1">📤 Export JSON</button>
+      <label class="btn" style="flex:1;text-align:center;cursor:pointer">
+        📥 Import JSON
+        <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+      </label>
+    </div>
+    <div id="backupMsg" style="font-size:11px;font-weight:600;display:none;margin-top:8px"></div>
+    <div style="font-size:10px;color:var(--muted);margin-top:10px;line-height:1.7">Export stáhne soubor s celým deníkem (jídla, aktivity, kroky, míry, InBody).<br>Import přepíše aktuální data — ulož si nejdřív zálohu!</div>
+  </div>
+
+</div>
+
+<div class="json-modal-overlay hidden" id="jsonModal" onclick="closeJsonModal(event)">
+  <div class="json-modal" onclick="event.stopPropagation()">
+    <div class="json-modal-title">📋 Vložit jídla od Claude</div>
+    <div class="json-modal-sub">
+      Napiš mi co jsi jedla a já ti pošlu JSON.<br>
+      Zkopíruj ho sem a klikni Přidat — vše se zapíše automaticky.
+    </div>
+    <textarea class="json-textarea" id="jsonInput" placeholder='[
+  {"name":"Ovesná kaše","meal":"Snídaně","kcal":320,"prot":12,"carb":52,"fat":6,"rating":4},
+  {"name":"Banán","meal":"Snídaně","kcal":89,"prot":1,"carb":23,"fat":0,"rating":5}
+]' oninput="previewJson()"></textarea>
+    <div class="json-err" id="jsonErr"></div>
+    <div class="json-preview" id="jsonPreview"></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn" onclick="closeJsonModal()" style="flex:1">Zrušit</button>
+      <button class="btn btn-g" id="jsonAddBtn" onclick="addFromJson()" style="flex:2;display:none">✅ Přidat <span id="jsonCount">0</span> jídel</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ═══ CONSTANTS ══════════════════════════════════
+let G = { kcal:1750, prot:130, carb:160, fat:55, bmr:1426, neat:285, steps10k:400, sPerKcal:0.04 };
+let BASE_BURN = G.bmr + G.neat + G.steps10k; // recalculated when new InBody added
+const IB_KEY = 'denik_inbody';
+
+function loadInbody() {
+  try { const r=localStorage.getItem(IB_KEY); return r?JSON.parse(r):[]; } catch { return []; }
+}
+function saveInbodyData(arr) { localStorage.setItem(IB_KEY, JSON.stringify(arr)); }
+
+const IB_SEED_VER = 'ib-seed-v1';
+const IB_SEED = [
+  {date:'2026-05-11', vaha:83.7, tuk:34.8, pctTuk:41.6, svaly:27.1, bmr:1426, bmi:29.0, visc:17},
+  {date:'2026-02-16', vaha:86.7, tuk:37.3, pctTuk:43.0, svaly:27.2, bmr:1438, bmi:30.4, visc:19},
+  {date:'2025-03-04', vaha:80.2, tuk:35.3, pctTuk:44.0, svaly:24.6, bmr:1340, bmi:28.8, visc:18},
+  {date:'2023-02-04', vaha:76.6, tuk:28.7, pctTuk:37.5, svaly:26.5, bmr:1404, bmi:27.5, visc:14},
+];
+
+function applyLatestInbody() {
+  // seed historical data on first run
+  if (localStorage.getItem(IB_KEY+'_seeded') !== IB_SEED_VER) {
+    if (!loadInbody().length) saveInbodyData(IB_SEED);
+    localStorage.setItem(IB_KEY+'_seeded', IB_SEED_VER);
+  }
+  const arr = loadInbody();
+  if (!arr.length) return; // use defaults
+  const latest = arr[0]; // sorted newest first
+  G.bmr = latest.bmr;
+  // Goals are recalculated by applyGoalsFromProfil() which reads cíl+kroky settings
+  // Called after loadProfil is available (boot order: applyLatestInbody → applyGoalsFromProfil)
+  // Goals properly computed in applyGoalsFromProfil() called right after
+  BASE_BURN = G.bmr + G.neat + G.steps10k; // will be updated by applyGoalsFromProfil
+  G.prot = Math.round(latest.svaly * 1.8); // fallback until applyGoalsFromProfil runs
+}
+
+const MEALS = ['Snídaně','Dopolední svačina','Oběd','Odpolední svačina','Večeře','Nápoj / jiné'];
+const MEAL_ICO = {'Snídaně':'☀️','Dopolední svačina':'🍎','Oběd':'🥗','Odpolední svačina':'🍌','Večeře':'🌙','Nápoj / jiné':'💧'};
+const ACT_ICO = {'🏋️ Silový trénink':'🏋️','🏃 Kardio / běh':'🏃','🚶 Chůze':'🚶','🚴 Kolo / spinning':'🚴','🏊 Plavání':'🏊','🧘 Yoga / pilates':'🧘','💃 Tanec':'💃','🎾 Squash / raketové sporty':'🎾','⚡ Jiné':'⚡'};
+
+// ═══ STATE ══════════════════════════════════════
+let S = {};
+let cur = todayStr();
+let CH = {};
+let fRating = 4;
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function day(d) { if (!S[d]) S[d] = {foods:[],acts:[],steps:0}; return S[d]; }
+
+// ═══ SEED DATA — předplněné záznamy ═════════════
+const SEED_FOODS = [
+  {id:1.1, name:'Míchaná vajíčka (2 ks)', meal:'Snídaně', kcal:148, prot:13, carb:1,  fat:10,   rating:4, note:''},
+  {id:1.2, name:'Cheddar 20g',             meal:'Snídaně', kcal:83,  prot:5,  carb:0,  fat:7,    rating:5, note:''},
+  {id:1.3, name:'Tastino křehký plátek',   meal:'Snídaně', kcal:48,  prot:1.5,carb:6,  fat:2,    rating:3, note:'sýr + sušená cibule'},
+  {id:2.1, name:'Kuřecí prsa se smetanovou omáčkou a houbami', meal:'Oběd', kcal:421, prot:37, carb:4, fat:21, rating:4, note:'1/4 receptu'},
+  {id:2.2, name:'Těstoviny (90g raw)',      meal:'Oběd',    kcal:321, prot:11, carb:63, fat:1.5,  rating:4, note:'vařené'},
+  {id:3.1, name:'Kuřecí stir-fry s paprikou, kukuricí a sojovkou', meal:'Večeře', kcal:225, prot:36, carb:6.5, fat:2, rating:5, note:'1/4 receptu'},
+  {id:3.2, name:'Rýže (60g raw)',           meal:'Večeře',  kcal:216, prot:4,  carb:48, fat:0.5,  rating:5, note:'vařená'},
+  {id:4.1, name:'Meloun vodní',               meal:'Nápoj / jiné', kcal:300, prot:3, carb:68, fat:0.5, rating:4, note:'1 kg'},
+  {id:4.2, name:'Lionlab Whey Protein pistácie', meal:'Nápoj / jiné', kcal:116, prot:23, carb:3, fat:1.5, rating:5, note:'1 dávka 30g'},
+];
+const SEED_ACTS = [
+  {id:3.1, type:'🎾 Squash / raketové sporty', min:75, kcal:650, note:'prům. tepovka 129'}
+];
+
+// ═══ BOOT ════════════════════════════════════════
+const SEED_DATE    = '2026-05-31'; // datum seed záznamu — nikdy se nemění
+const SEED_VERSION = '2026-05-31-v1';
+
+window.addEventListener('load', () => {
+  applyLatestInbody();
+  applyGoalsFromProfil(); // apply cíl + kroky settings on top of BMR
+  const ibDateEl = document.getElementById('ibDate'); if(ibDateEl) ibDateEl.value = todayStr();
+  try { const r = localStorage.getItem('denik4'); if(r) S = JSON.parse(r); } catch(e){}
+
+  // Seed se uloží JEDNOU pod pevným historickým datem — dnešek nikdy nepřepisuje
+  const seeded = localStorage.getItem('denik4_seed_ver');
+  if (seeded !== SEED_VERSION) {
+    if (!S[SEED_DATE] || !S[SEED_DATE].foods?.length) {
+      S[SEED_DATE] = {
+        foods: SEED_FOODS.map(f=>({...f})),
+        acts:  SEED_ACTS.map(a=>({...a})),
+        steps: 0
+      };
+    }
+    localStorage.setItem('denik4_seed_ver', SEED_VERSION);
+    persist();
+  }
+  // Dnešní den začíná vždy prázdný pokud tam nic není
+
+  const di = document.getElementById('dateInput');
+  di.value = cur;
+  di.addEventListener('change', e => { cur = e.target.value; syncSteps(); render(); });
+
+  initStars();
+  syncSteps();
+  render();
+  buildCharts();
+});
+
+function persist() { localStorage.setItem('denik4', JSON.stringify(S)); }
+
+function saveDay(btn) {
+  persist();
+  btn.textContent = '✓ uloženo';
+  setTimeout(() => btn.textContent = '💾 uložit', 1400);
+}
+
+function clearDay() {
+  if (!confirm('Smazat záznamy pro tento den?')) return;
+  delete S[cur]; persist(); syncSteps(); render();
+}
+
+function prevDay() {
+  const d = new Date(cur); d.setDate(d.getDate()-1);
+  cur = d.toISOString().split('T')[0];
+  document.getElementById('dateInput').value = cur;
+  syncSteps(); render();
+}
+
+function nextDay() {
+  const d = new Date(cur); d.setDate(d.getDate()+1);
+  cur = d.toISOString().split('T')[0];
+  document.getElementById('dateInput').value = cur;
+  syncSteps(); render();
+}
+
+// ═══ STARS ═══════════════════════════════════════
+function initStars() {
+  const el = document.getElementById('stars');
+  el.innerHTML = '';
+  for (let i=1;i<=5;i++) {
+    const s = document.createElement('span');
+    s.textContent = '★';
+    s.style.cssText = `opacity:${fRating>=i?1:.2};transition:opacity .1s;margin-right:2px`;
+    s.onclick = () => { fRating=i; initStars(); };
+    el.appendChild(s);
+  }
+}
+
+// ═══ FOOD ════════════════════════════════════════
+function addFood() {
+  const name = document.getElementById('fName').value.trim();
+  const kcal = +document.getElementById('fKcal').value;
+  const err = document.getElementById('fErr');
+  if (!name) { err.textContent='Zadej název jídla'; err.style.display=''; return; }
+  if (!kcal) { err.textContent='Zadej kalorie'; err.style.display=''; return; }
+  err.style.display = 'none';
+  day(cur).foods.push({
+    id: Date.now()+Math.random(),
+    name, meal: document.getElementById('fMeal').value,
+    kcal, prot: +document.getElementById('fProt').value||0,
+    carb: +document.getElementById('fCarb').value||0,
+    fat:  +document.getElementById('fFat').value||0,
+    rating: fRating,
+    note: document.getElementById('fNote').value.trim()
+  });
+  ['fName','fKcal','fProt','fCarb','fFat','fNote'].forEach(id => document.getElementById(id).value='');
+  fRating=4; initStars();
+  persist(); render();
+}
+
+window.addFoodEntry = function(e) {
+  day(cur).foods.push({id:Date.now()+Math.random(),name:e.name||'',meal:e.meal||'Jídlo',kcal:+e.kcal||0,prot:+e.prot||0,carb:+e.carb||0,fat:+e.fat||0,rating:+e.rating||3,note:e.note||''});
+  persist(); render();
+};
+
+window.clearFoodsToday = function() { day(cur).foods=[]; persist(); render(); };
+
+function removeFood(id) { day(cur).foods=day(cur).foods.filter(f=>f.id!==id); persist(); render(); }
+
+// ═══ ACTIVITY ════════════════════════════════════
+function addAct() {
+  const min = +document.getElementById('actMin').value||0;
+  const kcal= +document.getElementById('actKcal').value||0;
+  if (!min && !kcal) return;
+  day(cur).acts.push({id:Date.now(),type:document.getElementById('actType').value,min,kcal,note:document.getElementById('actNote').value.trim()});
+  document.getElementById('actMin').value='';
+  document.getElementById('actKcal').value='';
+  document.getElementById('actNote').value='';
+  persist(); render();
+}
+
+function removeAct(id) { day(cur).acts=day(cur).acts.filter(a=>a.id!==id); persist(); render(); }
+
+// ═══ STEPS ═══════════════════════════════════════
+function onStepsLive() {
+  const s = +document.getElementById('stepsInp').value||0;
+  updateStepsUI(s);
+  day(cur)._live = s; render();
+}
+
+function saveSteps() {
+  const s = +document.getElementById('stepsInp').value||0;
+  day(cur).steps=s; day(cur)._live=undefined;
+  updateStepsUI(s); persist(); render();
+}
+
+function syncSteps() {
+  const d=day(cur);
+  document.getElementById('stepsInp').value=d.steps||'';
+  updateStepsUI(d.steps||0);
+}
+
+function updateStepsUI(s) {
+  const kcalT=Math.round(s*G.sPerKcal);
+  const bon=Math.max(0,s-10000);
+  const bonK=Math.round(bon*G.sPerKcal);
+  document.getElementById('slKcal').textContent=kcalT;
+  const pct=Math.min(100,Math.round(s/20000*100));
+  const fill=document.getElementById('scFill');
+  fill.style.width=pct+'%';
+  fill.style.background=s>=10000?'linear-gradient(90deg,var(--orange),var(--green))':'linear-gradient(90deg,var(--orange),#e07b00)';
+  const bon_el=document.getElementById('slBonus');
+  if (bon>0){bon_el.style.display='';document.getElementById('slBonusVal').textContent=bonK;}
+  else bon_el.style.display='none';
+}
+
+function bonusKcal(s) { return Math.round(Math.max(0,s-10000)*G.sPerKcal); }
+
+// ═══ RENDER ══════════════════════════════════════
+function render() {
+  const d = day(cur);
+  const steps = d._live!==undefined ? d._live : (d.steps||0);
+  const totK=d.foods.reduce((a,f)=>a+f.kcal,0);
+  const totP=d.foods.reduce((a,f)=>a+f.prot,0);
+  const totC=d.foods.reduce((a,f)=>a+f.carb,0);
+  const totF=d.foods.reduce((a,f)=>a+f.fat,0);
+  const actK=d.acts.reduce((a,a2)=>a+a2.kcal,0);
+  const bsK=bonusKcal(steps);
+  const burn=BASE_BURN+actK+bsK;
+  const bal=totK-burn;
+
+  // Date label
+  document.getElementById('dateLbl').textContent = new Date(cur+'T12:00:00').toLocaleDateString('cs-CZ',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  // Banner
+  updateBanner(totK, burn, bal, bsK, steps);
+
+  // KPI
+  set('kK', Math.round(totK));
+  set('kP', totP.toFixed(0)+'g');
+  set('kC', totC.toFixed(0)+'g');
+  set('kF', totF.toFixed(0)+'g');
+  const rem = G.kcal - Math.round(totK);
+  set('kR', rem>0?rem:0);
+  set('kRs', rem>0?'do denního cíle':rem<-100?'⚠ nad cílem':'cíl splněn ✓');
+
+  // Big macros
+  set('bigKcal', Math.round(totK));
+  set('mP', totP.toFixed(0)+'g'); set('bP', totP.toFixed(0));
+  set('mC', totC.toFixed(0)+'g'); set('bC', totC.toFixed(0));
+  set('mF', totF.toFixed(0)+'g'); set('bF', totF.toFixed(0));
+  set('bK', Math.round(totK));
+
+  // Macro bars
+  const cl=(v,m)=>Math.min(100,Math.round(v/m*100));
+  bar('barP',cl(totP,G.prot)); bar('barC',cl(totC,G.carb));
+  bar('barF',cl(totF,G.fat));  bar('barK',cl(totK,G.kcal));
+
+  // Macro pill
+  const mp=document.getElementById('macroPill');
+  if (!totK)        { mp.textContent='Bez záznamu'; mp.className='pill pill-x'; }
+  else if(totK<1200){ mp.textContent='Příliš málo!'; mp.className='pill pill-r'; }
+  else if(totK<=1900){ mp.textContent='V cíli ✓';  mp.className='pill pill-g'; }
+  else if(totK<=2100){ mp.textContent='Mírně nad';  mp.className='pill pill-o'; }
+  else               { mp.textContent='Nad cílem';  mp.className='pill pill-r'; }
+
+  // Balance card
+  const bCol = !totK?'var(--muted)':bal<-150?'var(--green)':bal<=150?'var(--blue)':'var(--red)';
+  const bb=document.getElementById('balBig');
+  bb.textContent = totK ? (bal>0?'+':bal<0?'−':'')+Math.abs(Math.round(bal)) : '—';
+  bb.style.color = bCol;
+  set('b1', BASE_BURN.toLocaleString('cs'));
+  set('b2', actK||'0');
+  set('b3', bsK>0?'+'+bsK:'0');
+  set('b4', Math.round(totK)||'0');
+  set('b5', Math.round(burn).toLocaleString('cs'));
+  const b6=document.getElementById('b6');
+  b6.textContent = totK ? (bal>0?'+':bal<0?'−':'')+Math.abs(Math.round(bal)) : '—';
+  b6.style.color = bCol;
+  const bp=document.getElementById('balPill');
+  if (!totK)         { bp.textContent='—';             bp.className='pill pill-x'; }
+  else if(bal<-600)  { bp.textContent='⚡ Velký deficit';bp.className='pill pill-y'; }
+  else if(bal<-150)  { bp.textContent='✅ V deficitu';  bp.className='pill pill-g'; }
+  else if(bal<=150)  { bp.textContent='⚖️ Udržovací';  bp.className='pill pill-b'; }
+  else               { bp.textContent='⚠️ Přebytek';   bp.className='pill pill-r'; }
+
+  renderFoods(d.foods);
+  renderActs(d.acts, steps);
+  refreshCharts(totP, totC, totF);
+}
+
+function updateBanner(totK, burn, bal, bsK, steps) {
+  const bn=document.getElementById('banner');
+  if (!totK) {
+    bn.className='banner banner-empty';
+    set('bnIcon','📋'); set('bnTag','Zatím bez záznamu');
+    set('bnNum','—'); set('bnSub','Přidej jídla pro výpočet kalorické bilance');
+  } else {
+    const abs=Math.abs(Math.round(bal));
+    const numStr=(bal>0?'+':'−')+abs+' kcal';
+    if (bal<=-600) {
+      bn.className='banner banner-big';
+      set('bnIcon','⚡'); set('bnTag','Velký kalorický deficit!');
+      set('bnNum',numStr); set('bnSub','Super spalování! Dbej na dostatek bílkovin.');
+    } else if (bal<-150) {
+      bn.className='banner banner-deficit';
+      set('bnIcon','🔥'); set('bnTag','V deficitu — hubneš!');
+      set('bnNum',numStr); set('bnSub','Skvělé! Jsi na správné cestě ke svému cíli.');
+    } else if (bal<=150) {
+      bn.className='banner banner-maint';
+      set('bnIcon','⚖️'); set('bnTag','Udržovací příjem');
+      set('bnNum',numStr); set('bnSub','Zkus snížit o 200–300 kcal pro deficit.');
+    } else {
+      bn.className='banner banner-surplus';
+      set('bnIcon','📈'); set('bnTag','Kalorický přebytek');
+      set('bnNum',numStr); set('bnSub','Sniž příjem nebo přidej aktivitu.');
+    }
+  }
+  set('bnBurn', Math.round(burn)+' kcal');
+  set('bnIntake', Math.round(totK)+' kcal');
+  set('bnBonus', bsK>0?'+'+bsK+' kcal':steps>=10000?'10k splněno ✓':Math.round(steps/100)+'% do 10k');
+}
+
+function set(id,val){const e=document.getElementById(id);if(e)e.textContent=val;}
+function bar(id,pct){const e=document.getElementById(id);if(e)e.style.width=pct+'%';}
+function stars(n){return'★'.repeat(n)+'☆'.repeat(5-n);}
+function starCol(n){return n>=5?'var(--green)':n>=4?'var(--orange)':n>=3?'var(--muted)':'var(--red)';}
+
+function renderFoods(foods) {
+  const el=document.getElementById('foodLog');
+  if(!foods.length){el.innerHTML='<div class="empty"><span class="ei">🍽</span>Zatím žádné záznamy.</div>';return;}
+  const g={};foods.forEach(f=>{if(!g[f.meal])g[f.meal]=[];g[f.meal].push(f);});
+  let html='';
+  MEALS.forEach(m=>{
+    if(!g[m])return;
+    const items = g[m];
+    const gK = items.reduce((s,f)=>s+f.kcal, 0);
+    const gP = items.reduce((s,f)=>s+f.prot, 0);
+    const gC = items.reduce((s,f)=>s+f.carb, 0);
+    const gF = items.reduce((s,f)=>s+f.fat,  0);
+    const multi = items.length > 1;
+
+    html+=`<div class="meal-sec">
+      <div class="meal-hdr">
+        <span class="meal-hdr-n">${MEAL_ICO[m]||'🍴'} ${m}</span>
+        <span class="meal-hdr-k">${Math.round(gK)} kcal</span>
+      </div>`;
+
+    items.forEach(f=>{
+      html+=`<div class="food-row">
+        <div class="fr-left">
+          <div class="fr-name">${f.name}${f.note?`<span class="fr-note">— ${f.note}</span>`:''}</div>
+          <div class="fr-macros">
+            <span style="color:var(--blue)">B:${f.prot}g</span>
+            <span style="color:var(--orange)">S:${f.carb}g</span>
+            <span style="color:var(--purple)">T:${f.fat}g</span>
+            <span style="color:${starCol(f.rating)}">${stars(f.rating)}</span>
+          </div>
+        </div>
+        <div class="fr-right">
+          <div class="fr-kcal">${Math.round(f.kcal)}<span>kcal</span></div>
+          <button class="btn" style="padding:3px 8px;font-size:10px;color:var(--blue);border-color:var(--blue)" onclick="openEditModal(${f.id})">✏️</button>
+          <button class="btn btn-del" style="padding:3px 8px;font-size:10px" onclick="removeFood(${f.id})">✕</button>
+        </div>
+      </div>`;
+    });
+
+    // Summary row — only if more than 1 item
+    if (multi) {
+      html+=`<div style="
+        display:flex;justify-content:space-between;align-items:center;
+        margin-top:6px;padding:8px 12px;
+        background:var(--bg2);border:1px solid var(--border);
+        border-radius:8px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)">
+          Celkem ${items.length} položky
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:baseline">
+          <span style="color:var(--blue);font-size:11px;font-weight:600">B: ${gP.toFixed(0)}g</span>
+          <span style="color:var(--orange);font-size:11px;font-weight:600">S: ${gC.toFixed(0)}g</span>
+          <span style="color:var(--purple);font-size:11px;font-weight:600">T: ${gF.toFixed(0)}g</span>
+          <span style="font-family:var(--serif);font-size:16px;color:var(--orange);font-weight:400">${Math.round(gK)} kcal</span>
+        </div>
+      </div>`;
+    }
+
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
+function renderActs(acts, steps) {
+  const el=document.getElementById('actLog');
+  let html='';
+  if(steps>0){
+    const bk=bonusKcal(steps);
+    html+=`<div class="act-row">
+      <div class="act-ico">👟</div>
+      <div class="act-info"><div class="act-name">Kroky</div><div class="act-det">${steps.toLocaleString('cs')} kroků${steps>=10000?' — 10k splněno ✓':' — '+Math.round(steps/100)+'% do 10k'}</div></div>
+      <div style="text-align:right">
+        <div class="act-kcal" style="color:var(--orange)">${Math.round(steps*G.sPerKcal)} kcal</div>
+        ${bk>0?`<div style="font-size:10px;color:var(--green);font-weight:600">+${bk} bonus</div>`:''}
+      </div>
+    </div>`;
+  }
+  acts.forEach(a=>{
+    const ico=ACT_ICO[a.type]||'⚡';
+    html+=`<div class="act-row">
+      <div class="act-ico">${ico}</div>
+      <div class="act-info">
+        <div class="act-name">${a.type}${a.note?` <span style="color:var(--muted);font-size:10px">— ${a.note}</span>`:''}</div>
+        <div class="act-det">${a.min?a.min+' min':'—'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="act-kcal">${a.kcal} <span style="font-size:10px;color:var(--muted)">kcal</span></div>
+        <button class="btn btn-del" style="padding:3px 8px;font-size:10px" onclick="removeAct(${a.id})">✕</button>
+      </div>
+    </div>`;
+  });
+  if(!html)el.innerHTML='<div class="empty"><span class="ei">🏃</span>Zatím žádné aktivity.</div>';
+  else el.innerHTML=html;
+}
+
+// ═══ TABS ════════════════════════════════════════
+function setTab(name) {
+  const names=['jidlo','aktivita','prehled','inbody','miry','nastaveni'];
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',names[i]===name));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('on'));
+  document.getElementById('tab-'+name).classList.add('on');
+  if(name==='prehled'||name==='inbody') setTimeout(refreshCharts,30);
+  if(name==='miry') setTimeout(renderMiryCharts,30);
+  if(name==='nastaveni') loadNastaveniForm();
+}
+
+// ═══ CHARTS ══════════════════════════════════════
+let chartPeriod = 7;
+
+function setPeriod(n) {
+  chartPeriod = n;
+  document.getElementById('btnP7').className  = n===7  ? 'btn btn-g' : 'btn';
+  document.getElementById('btnP30').className = n===30 ? 'btn btn-g' : 'btn';
+  const lbl = n + ' dní';
+  ['lblKcal','lblProt','lblBal','lblSteps'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = el.textContent.replace(/\d+ dní/, lbl);
+  });
+  refreshCharts(0,0,0);
+}
+
+function last7(){
+  const a=[];
+  for(let i=chartPeriod-1;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);a.push(d.toISOString().split('T')[0]);}
+  return a;
+}
+
+const cOpts=()=>({
+  plugins:{
+    legend:{display:false},
+    tooltip:{
+      backgroundColor:'#1c1c26',
+      titleColor:'#f0f0f8',
+      bodyColor:'#b0b0c8',
+      borderColor:'#2a2a3a',
+      borderWidth:1,
+      padding:10,
+      cornerRadius:8
+    }
+  },
+  scales:{
+    x:{ticks:{color:'#8080a8',font:{family:'DM Sans',size:10},maxRotation:0},grid:{color:'#1e1e2e'},border:{color:'#2a2a3a'}},
+    y:{ticks:{color:'#8080a8',font:{family:'DM Sans',size:10}},grid:{color:'#1e1e2e'},border:{color:'#2a2a3a'}}
+  }
+});
+
+function buildCharts(){
+  const co=cOpts();
+
+  CH.donut=new Chart(document.getElementById('chartDonut')||document.createElement('canvas'),{
+    type:'doughnut',data:{labels:['Bílkoviny','Sacharidy','Tuky'],datasets:[{data:[0,0,0],backgroundColor:['#60a5fa','#fb923c','#c084fc'],borderColor:'#0f0f14',borderWidth:3}]},
+    options:{cutout:'66%',plugins:{legend:{display:true,labels:{color:'#b0b0c8',font:{family:'DM Sans',size:10},boxWidth:10,padding:14}}}}
+  });
+
+  CH.kcal=new Chart(document.getElementById('cKcal'),{
+    type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:'rgba(74,222,128,.5)',borderColor:'#4ade80',borderWidth:1,borderRadius:6}]},options:co
+  });
+
+  CH.prot=new Chart(document.getElementById('cProt'),{
+    type:'line',data:{labels:[],datasets:[{data:[],borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,.12)',tension:.4,fill:true,pointBackgroundColor:'#60a5fa',pointRadius:5,pointHoverRadius:7,borderWidth:2}]},options:co
+  });
+
+  // FIXED balance chart — use 0 instead of null, custom colors per bar
+  CH.bal=new Chart(document.getElementById('cBal'),{
+    type:'bar',
+    data:{labels:[],datasets:[{data:[],backgroundColor:[],borderRadius:5}]},
+    options:{
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#1c1c26',titleColor:'#f0f0f8',bodyColor:'#b0b0c8',
+          borderColor:'#2a2a3a',borderWidth:1,padding:10,cornerRadius:8,
+          callbacks:{label:ctx=>ctx.raw===0?'Žádná data':(ctx.raw>0?'+':'')+ctx.raw+' kcal'}
+        }
+      },
+      scales:{
+        x:{ticks:{color:'#606080',font:{family:'DM Sans',size:9}},grid:{color:'#2a2a3a'}},
+        y:{ticks:{color:'#606080',font:{family:'DM Sans',size:9},callback:v=>v===0?'0':(v>0?'+':'')+v},grid:{color:'#2a2a3a'},
+          afterDataLimits(scale){const ext=Math.max(Math.abs(scale.min),Math.abs(scale.max),200);scale.min=-ext;scale.max=ext;}
+        }
+      }
+    }
+  });
+
+  CH.steps=new Chart(document.getElementById('cSteps'),{
+    type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:'rgba(251,146,60,.55)',borderColor:'#fb923c',borderWidth:1,borderRadius:6}]},options:co
+  });
+
+  // ── IB TREND: 3 separate charts ──────────────────
+  const IB_LABELS = ['02/2023','03/2025','02/2026','05/2026'];
+  const ibOpts = (col, yMin, yMax, goal) => ({
+    responsive:true,
+    plugins:{
+      legend:{display:false},
+      annotation: goal ? {annotations:{goal:{type:'line',yMin:goal,yMax:goal,borderColor:'rgba(45,122,58,.4)',borderDash:[5,4],borderWidth:1.5}}} : {}
+    },
+    scales:{
+      x:{ticks:{color:'#606080',font:{family:'DM Sans',size:9}},grid:{color:'#2a2a3a'}},
+      y:{min:yMin,max:yMax,ticks:{color:'#606080',font:{family:'DM Sans',size:9}},grid:{color:'#2a2a3a'}}
+    }
+  });
+
+  // VÁHA
+  CH.ibVaha = new Chart(document.getElementById('cIbVaha'),{
+    type:'line',
+    data:{
+      labels: IB_LABELS,
+      datasets:[{
+        label:'Váha kg',
+        data:[76.6, 80.2, 86.7, 83.7],
+        borderColor:'#e2e2f0',
+        backgroundColor:'rgba(226,226,240,.06)',
+        tension:.35,fill:true,
+        pointBackgroundColor:['#4ade80','#fb923c','#f87171','#4ade80'],
+        pointRadius:7, pointHoverRadius:9,
+        borderWidth:2
+      }]
+    },
+    options: ibOpts('#333', 70, 92, 63.5)
+  });
+
+  // TUK
+  CH.ibTuk = new Chart(document.getElementById('cIbTuk'),{
+    type:'bar',
+    data:{
+      labels: IB_LABELS,
+      datasets:[
+        {
+          label:'Tuk kg',
+          data:[28.7, 35.3, 37.3, 34.8],
+          backgroundColor:['rgba(248,113,113,.45)','rgba(248,113,113,.6)','rgba(248,113,113,.75)','rgba(248,113,113,.6)'],
+          borderColor:['#f87171','#f87171','#f87171','#f87171'],
+          borderWidth:1.5, borderRadius:5, yAxisID:'y'
+        },
+        {
+          label:'% Tuku',
+          data:[37.5, 44.0, 43.0, 41.6],
+          type:'line',
+          borderColor:'#fb923c',
+          backgroundColor:'transparent',
+          tension:.35,
+          pointBackgroundColor:'#fb923c',
+          pointRadius:5,
+          borderWidth:2,
+          yAxisID:'y2'
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:true,labels:{color:'#888880',font:{family:'DM Sans',size:9},boxWidth:8,padding:10}}},
+      scales:{
+        x:{ticks:{color:'#606080',font:{family:'DM Sans',size:9}},grid:{color:'#2a2a3a'}},
+        y:{min:20,max:42,ticks:{color:'#8080a8',font:{family:'DM Sans',size:10},callback:v=>v+'kg'},grid:{color:'#2a2a3a'}},
+        y2:{position:'right',min:30,max:50,ticks:{color:'#fb923c',font:{family:'DM Sans',size:10},callback:v=>v+'%'},grid:{display:false}}
+      }
+    }
+  });
+
+  // SVALY
+  CH.ibSvaly = new Chart(document.getElementById('cIbSvaly'),{
+    type:'line',
+    data:{
+      labels: IB_LABELS,
+      datasets:[{
+        label:'Svaly kg',
+        data:[26.5, 24.6, 27.2, 27.1],
+        borderColor:'#60a5fa',
+        backgroundColor:'rgba(96,165,250,.1)',
+        tension:.35, fill:true,
+        pointBackgroundColor:['#60a5fa','#f87171','#60a5fa','#60a5fa'],
+        pointRadius:7, pointHoverRadius:9,
+        borderWidth:2
+      }]
+    },
+    options: ibOpts('#1a5fa8', 22, 30, null)
+  });
+
+  refreshCharts(0,0,0);
+}
+
+function refreshCharts(p,c,f){
+  if(!CH.kcal)return;
+
+  const days=last7();
+  const labels=days.map((d,i)=>{ if(chartPeriod<=7) return d.slice(5).replace('-','/'); return (i%5===0||i===days.length-1) ? d.slice(5).replace('-','/') : ''; });
+  const kcalArr=days.map(d=>Math.round((S[d]?.foods||[]).reduce((s,x)=>s+x.kcal,0)));
+  const protArr=days.map(d=>Math.round((S[d]?.foods||[]).reduce((s,x)=>s+x.prot,0)));
+  const stepsArr=days.map(d=>S[d]?.steps||0);
+
+  // FIX: use 0 for days with no data (null breaks bar chart), color-code each bar
+  const balArr=days.map(d=>{
+    const dy=S[d]||{};
+    const intake=(dy.foods||[]).reduce((s,x)=>s+x.kcal,0);
+    if(!intake)return 0; // 0 instead of null = no bug
+    const bn=bonusKcal(dy.steps||0);
+    const burn=BASE_BURN+(dy.acts||[]).reduce((s,a)=>s+a.kcal,0)+bn;
+    return Math.round(intake-burn);
+  });
+
+  const balColors=balArr.map((v,i)=>{
+    const dy=S[days[i]]||{};
+    const hasData=(dy.foods||[]).length>0;
+    if(!hasData)return 'rgba(96,96,128,.2)';
+    if(v<-600) return 'rgba(251,191,36,.8)';
+    if(v<-150) return 'rgba(74,222,128,.75)';
+    if(v<150)  return 'rgba(96,165,250,.75)';
+    return 'rgba(248,113,113,.8)';
+  });
+
+  const upd=(c,l,d)=>{c.data.labels=l;c.data.datasets[0].data=d;c.update('none');};
+  upd(CH.kcal,labels,kcalArr);
+  upd(CH.prot,labels,protArr);
+  upd(CH.steps,labels,stepsArr);
+  CH.bal.data.labels=labels;
+  CH.bal.data.datasets[0].data=balArr;
+  CH.bal.data.datasets[0].backgroundColor=balColors;
+  CH.bal.update('none');
+}
+
+// ═══ MÍRY ════════════════════════════════════════
+const MIRY_KEY = 'denik_miry';
+
+function loadMiry() {
+  try { const r=localStorage.getItem(MIRY_KEY); return r?JSON.parse(r):[]; } catch{return [];}
+}
+function saveMiryData(arr) {
+  localStorage.setItem(MIRY_KEY, JSON.stringify(arr));
+}
+
+function saveMiry() {
+  const vaha  = parseFloat(document.getElementById('mVaha').value)  || null;
+  const pas   = parseFloat(document.getElementById('mPas').value)   || null;
+  const boky  = parseFloat(document.getElementById('mBoky').value)  || null;
+  const stehna= parseFloat(document.getElementById('mStehna').value)|| null;
+  const ruka  = parseFloat(document.getElementById('mRuka').value)  || null;
+  const err   = document.getElementById('miryErr');
+
+  if (!vaha && !pas && !boky && !stehna && !ruka) {
+    err.textContent='Zadej alespoň jednu míru'; err.style.display=''; return;
+  }
+  err.style.display='none';
+
+  const arr = loadMiry();
+  // remove existing entry for today if any
+  const today = todayStr();
+  const filtered = arr.filter(m => m.date !== today);
+  filtered.push({ date:today, vaha, pas, boky, stehna, ruka });
+  filtered.sort((a,b) => b.date.localeCompare(a.date));
+  saveMiryData(filtered);
+
+  // clear inputs
+  ['mVaha','mPas','mBoky','mStehna','mRuka'].forEach(id => document.getElementById(id).value='');
+
+  renderMiryLog();
+  renderMiryCharts();
+}
+
+function deleteMiry(date) {
+  const arr = loadMiry().filter(m => m.date !== date);
+  saveMiryData(arr);
+  renderMiryLog();
+  renderMiryCharts();
+}
+
+function fmtMiryDate(d) {
+  return new Date(d+'T12:00:00').toLocaleDateString('cs-CZ',{day:'numeric',month:'long',year:'numeric'});
+}
+
+function diffStr(curr, prev, unit, invert) {
+  if (prev == null || curr == null) return '';
+  const d = Math.round((curr - prev) * 10) / 10;
+  if (d === 0) return '<span style="color:var(--muted)">→ beze změny</span>';
+  const better = invert ? d < 0 : d > 0; // for weight/cm lower is better
+  const col = better ? 'var(--red)' : 'var(--green)';
+  const arrow = d > 0 ? '▲' : '▼';
+  return `<span style="color:${col}">${arrow} ${Math.abs(d)} ${unit}</span>`;
+}
+
+function renderMiryLog() {
+  const el = document.getElementById('miryLog');
+  const arr = loadMiry();
+  if (!arr.length) {
+    el.innerHTML = '<div class="empty"><span class="ei">📏</span>Zatím žádná měření.</div>';
+    return;
+  }
+  let html = '';
+  arr.forEach((m, i) => {
+    const prev = arr[i+1] || null;
+    html += `<div class="miry-row">
+      <div class="miry-row-date">${fmtMiryDate(m.date)}</div>
+      <div class="miry-row-vals">
+        ${m.vaha != null ? `<div class="miry-val">
+          <div class="mv">⚖️ ${m.vaha}</div>
+          <div class="ml">Váha kg</div>
+          <div class="md">${prev?.vaha != null ? diffStr(m.vaha, prev.vaha, 'kg', false) : ''}</div>
+        </div>` : ''}
+        ${m.pas != null ? `<div class="miry-val">
+          <div class="mv">📏 ${m.pas}</div>
+          <div class="ml">Pas cm</div>
+          <div class="md">${prev?.pas != null ? diffStr(m.pas, prev.pas, 'cm', false) : ''}</div>
+        </div>` : ''}
+        ${m.boky != null ? `<div class="miry-val">
+          <div class="mv">📏 ${m.boky}</div>
+          <div class="ml">Boky cm</div>
+          <div class="md">${prev?.boky != null ? diffStr(m.boky, prev.boky, 'cm', false) : ''}</div>
+        </div>` : ''}
+        ${m.stehna != null ? `<div class="miry-val">
+          <div class="mv">📏 ${m.stehna}</div>
+          <div class="ml">Stehno cm</div>
+          <div class="md">${prev?.stehna != null ? diffStr(m.stehna, prev.stehna, 'cm', false) : ''}</div>
+        </div>` : ''}
+        ${m.ruka != null ? `<div class="miry-val">
+          <div class="mv">💪 ${m.ruka}</div>
+          <div class="ml">Biceps cm</div>
+          <div class="md" style="color:var(--muted)">${prev?.ruka != null ? (()=>{ const d=Math.round((m.ruka-prev.ruka)*10)/10; return d===0?'→ beze změny':(d>0?'▲ +':'▼ ')+Math.abs(d)+' cm'; })() : ''}</div>
+        </div>` : ''}
+      </div>
+      <button class="btn btn-del" style="padding:3px 8px;font-size:10px;flex-shrink:0" onclick="deleteMiry('${m.date}')">✕</button>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+let CH_M = {};
+
+function renderMiryCharts() {
+  const arr = loadMiry().slice().reverse(); // oldest first for chart
+  const labels = arr.map(m => {
+    const d = new Date(m.date+'T12:00:00');
+    return d.toLocaleDateString('cs-CZ',{day:'numeric',month:'numeric'});
+  });
+
+  const mOpts = (color, min, max) => ({
+    responsive:true,
+    plugins:{ legend:{display:false} },
+    scales:{
+      x:{ ticks:{color:'#606080',font:{family:'DM Sans',size:9}}, grid:{color:'#2a2a3a'} },
+      y:{ min, max,
+          ticks:{color:'#606080',font:{family:'DM Sans',size:9}},
+          grid:{color:'#2a2a3a'}
+      }
+    }
+  });
+
+  const mkData = (key, color) => ({
+    labels,
+    datasets:[{
+      data: arr.map(m => m[key]),
+      borderColor: color,
+      backgroundColor: color.replace(')',', .08)').replace('var(--','rgba(').replace('green','45,122,58').replace('orange','196,92,0').replace('purple','107,63,160').replace('blue','26,95,168'),
+      tension:.35, fill:true,
+      pointBackgroundColor: color,
+      pointRadius: arr.length === 1 ? 6 : 4,
+      spanGaps: true,
+      borderWidth:2
+    }]
+  });
+
+  const vahaData = arr.map(m=>m.vaha);
+  const pasData  = arr.map(m=>m.pas);
+  const bokyData = arr.map(m=>m.boky);
+  const stehData = arr.map(m=>m.stehna);
+  const rukaData = arr.map(m=>m.ruka);
+
+  const autoRange = (data, pad=3) => {
+    const vals = data.filter(v=>v!=null);
+    if (!vals.length) return [0, 100];
+    return [Math.floor(Math.min(...vals))-pad, Math.ceil(Math.max(...vals))+pad];
+  };
+
+  const configs = [
+    {id:'cMVaha',  data:vahaData, color:'#333333'},
+    {id:'cMPas',   data:pasData,  color:'#c45c00'},
+    {id:'cMBoky',  data:bokyData, color:'#6b3fa0'},
+    {id:'cMStehna',data:stehData, color:'#1a5fa8'},
+    {id:'cMRuka',  data:rukaData, color:'#2d7a3a'},
+  ];
+
+  configs.forEach(({id, data, color}) => {
+    const [mn, mx] = autoRange(data);
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    if (CH_M[id]) { CH_M[id].destroy(); }
+    CH_M[id] = new Chart(canvas, {
+      type:'line',
+      data:{
+        labels,
+        datasets:[{
+          data,
+          borderColor: color,
+          backgroundColor: color.replace('#','rgba(').replace(/^rgba\((..)(..)(..)/,(_,r,g,b)=>`rgba(${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)}`)+',.12)',
+          tension:.35, fill:true,
+          pointBackgroundColor: color,
+          pointRadius: data.filter(v=>v!=null).length === 1 ? 7 : 4,
+          spanGaps:true,
+          borderWidth:2
+        }]
+      },
+      options: mOpts(color, mn, mx)
+    });
+  });
+}
+
+// init miry on load
+window.addEventListener('load', () => {
+  // will be called after main load listener, just render log
+  setTimeout(() => { renderMiryLog(); }, 100);
+}, {once:false});
+
+
+// ═══ EXPORT / IMPORT ════════════════════════════════
+function exportData() {
+  const backup = {
+    version: '1.0',
+    exportDate: new Date().toISOString(),
+    jidelnicek: S,
+    miry: loadMiry()
+  };
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().split('T')[0];
+  a.href     = url;
+  a.download = `denik-zaloha-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showBackupMsg('✓ Záloha stažena!', 'var(--green)');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const backup = JSON.parse(e.target.result);
+      if (!backup.jidelnicek) throw new Error('Neplatný soubor');
+
+      if (!confirm('Importovat zálohu? Přepíše stávající data.')) return;
+
+      // restore food diary
+      S = backup.jidelnicek;
+      persist();
+
+      // restore miry if present
+      if (backup.miry) {
+        saveMiryData(backup.miry);
+      }
+
+      syncSteps();
+      render();
+      renderMiryLog();
+      showBackupMsg('✓ Data obnovena!', 'var(--green)');
+    } catch(err) {
+      showBackupMsg('✗ Chyba — zkontroluj soubor', 'var(--red)');
+    }
+    // reset file input
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function showBackupMsg(txt, col) {
+  const el = document.getElementById('backupMsg');
+  el.textContent = txt;
+  el.style.color = col;
+  el.style.display = '';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+
+// ═══ NEW INBODY ══════════════════════════════════════
+function previewInbody() {
+  const bmr = +document.getElementById('ibBmr').value || 0;
+  const svaly = +document.getElementById('ibSvaly').value || 0;
+  if (!bmr) { document.getElementById('ibPreview').style.display='none'; return; }
+  const newBurn = bmr + G.neat + G.steps10k; // will be refined by applyGoalsFromProfil
+  const newProt = Math.round(svaly * 1.8) || 130;
+  document.getElementById('ibPrevBurn').textContent = newBurn.toLocaleString('cs') + ' kcal';
+  document.getElementById('ibPrevKcal').textContent = newKcal + ' kcal';
+  document.getElementById('ibPrevProt').textContent = newProt + 'g';
+  document.getElementById('ibPreview').style.display = '';
+}
+
+function saveNewInbody() {
+  const date  = document.getElementById('ibDate').value;
+  const vaha  = +document.getElementById('ibVaha').value  || null;
+  const tuk   = +document.getElementById('ibTuk').value   || null;
+  const pctTuk= +document.getElementById('ibPctTuk').value|| null;
+  const svaly = +document.getElementById('ibSvaly').value || null;
+  const bmr   = +document.getElementById('ibBmr').value   || null;
+  const bmi   = +document.getElementById('ibBmi').value   || null;
+  const visc  = +document.getElementById('ibVisc').value  || null;
+  const err   = document.getElementById('ibFormErr');
+
+  if (!date) { err.textContent='Zadej datum měření'; err.style.display=''; return; }
+  if (!bmr)  { err.textContent='BMR je povinné — najdeš ho na InBody výsledku'; err.style.display=''; return; }
+  err.style.display = 'none';
+
+  const arr = loadInbody();
+  // remove existing for same date
+  const filtered = arr.filter(m => m.date !== date);
+  filtered.push({ date, vaha, tuk, pctTuk, svaly, bmr, bmi, visc });
+  filtered.sort((a,b) => b.date.localeCompare(a.date));
+  saveInbodyData(filtered);
+
+  // Apply new values immediately
+  applyLatestInbody();
+  applyGoalsFromProfil(); // apply cíl + kroky settings on top of BMR
+  const ibDateEl = document.getElementById('ibDate'); if(ibDateEl) ibDateEl.value = todayStr();
+  updateIbGoalsDisplay();
+
+  // clear form
+  ['ibDate','ibVaha','ibTuk','ibPctTuk','ibSvaly','ibBmr','ibBmi','ibVisc'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('ibPreview').style.display = 'none';
+
+  renderInbodyHistory();
+  render(); // re-render everything with new BMR/goals
+}
+
+function updateIbGoalsDisplay() {
+  document.getElementById('ibcBmr').textContent  = G.bmr.toLocaleString('cs') + ' kcal';
+  document.getElementById('ibcBurn').textContent = BASE_BURN.toLocaleString('cs');
+  document.getElementById('ibcKcal').textContent = G.kcal.toLocaleString('cs');
+  document.getElementById('ibcProt').textContent = G.prot + 'g';
+  const deficit = BASE_BURN - G.kcal;
+  document.getElementById('ibcDeficit').textContent = '−' + deficit.toLocaleString('cs') + ' kcal';
+  // also update KPI hint
+  const kpis = document.querySelector('.kpi .ks');
+  if (document.getElementById('kK')) {
+    document.querySelectorAll('.kpi')[0].querySelector('.ks').textContent = 'cíl: ' + G.kcal.toLocaleString('cs') + ' kcal';
+  }
+  // update macro bars label
+  const bkEl = document.getElementById('bK');
+  if (bkEl) {
+    const parent = bkEl.closest('.mbar-top');
+    if (parent) parent.querySelector('.mbar-v').innerHTML = `<span id="bK">${bkEl.textContent}</span> / ${G.kcal.toLocaleString('cs')} kcal`;
+  }
+}
+
+function renderInbodyHistory() {
+  const arr = loadInbody();
+  const container = document.getElementById('ibHistoryList');
+  if (!arr.length) return; // static cards still shown
+  // insert dynamic cards before static ones
+  // show/hide empty state
+  const emptyMsg = document.getElementById('ibEmptyMsg');
+  if (emptyMsg) emptyMsg.style.display = arr.length ? 'none' : '';
+
+  let existing = document.getElementById('ibDynamicCards');
+  if (!existing) {
+    existing = document.createElement('div');
+    existing.id = 'ibDynamicCards';
+    existing.style.cssText = 'display:flex;flex-direction:column;gap:14px';
+    container.insertBefore(existing, container.firstChild);
+  }
+  let html = '';
+  arr.forEach((m, i) => {
+    const prev = arr[i+1] || null;
+    const diff = (curr, p, inv) => {
+      if (!p || curr == null) return '';
+      const d = Math.round((curr - p)*10)/10;
+      if (d===0) return '<span style="color:var(--muted)">→ beze změny</span>';
+      const good = inv ? d > 0 : d < 0;
+      return `<span style="color:${good?'var(--green)':'var(--red)'}">${d>0?'▲ +':'▼ '}${Math.abs(d)}</span>`;
+    };
+    const dateLabel = new Date(m.date+'T12:00:00').toLocaleDateString('cs-CZ',{day:'numeric',month:'long',year:'numeric'});
+    const isLatest = i === 0;
+    html += `<div class="card" style="border-left:4px solid ${isLatest?'var(--green)':'var(--border2)'}">
+      <div class="ib-date">
+        <div>
+          <div class="ib-date-label">${dateLabel}</div>
+          ${isLatest?'<span style="color:var(--green);font-size:9px;background:var(--green-l);padding:2px 8px;border-radius:20px;border:1px solid var(--green-m);font-weight:700;letter-spacing:1px;text-transform:uppercase">✓ Aktuální</span>':''}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${m.bmr?`<div style="text-align:right"><div style="font-family:var(--serif);font-size:18px;color:var(--orange)">${m.bmr}</div><div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">BMR kcal</div></div>`:''}
+          <button onclick="deleteInbody('${m.date}')" class="btn btn-del" style="padding:3px 8px;font-size:10px">✕</button>
+        </div>
+      </div>
+      <div class="ib-main">
+        ${m.vaha!=null?`<div class="ib-stat"><div class="iv">${m.vaha}</div><div class="il">⚖️ Váha kg</div><div class="ic">${diff(m.vaha,prev?.vaha,false)}</div></div>`:''}
+        ${m.tuk!=null?`<div class="ib-stat"><div class="iv" style="color:var(--red)">${m.tuk}</div><div class="il">🔴 Tuk kg</div><div class="ic">${diff(m.tuk,prev?.tuk,false)}</div></div>`:''}
+        ${m.pctTuk!=null?`<div class="ib-stat"><div class="iv" style="color:var(--red)">${m.pctTuk}%</div><div class="il">📊 % Tuku</div><div class="ic">${diff(m.pctTuk,prev?.pctTuk,false)}</div></div>`:''}
+        ${m.svaly!=null?`<div class="ib-stat"><div class="iv" style="color:var(--blue)">${m.svaly}</div><div class="il">💪 Svaly kg</div><div class="ic">${diff(m.svaly,prev?.svaly,true)}</div></div>`:''}
+      </div>
+      <div class="ib-extra">
+        ${m.bmi!=null?`<div class="ib-pill"><div><div class="pv">${m.bmi}</div><div class="pl">BMI</div></div></div>`:''}
+        ${m.visc!=null?`<div class="ib-pill"><div><div class="pv" style="color:${m.visc>9?'var(--red)':'var(--green)'}">${m.visc}</div><div class="pl">Viscerální tuk</div></div></div>`:''}
+        ${m.bmr!=null?`<div class="ib-pill"><div><div class="pv" style="color:var(--orange)">${(G.bmr+G.neat+G.steps10k).toLocaleString('cs')}</div><div class="pl">Základ výdej</div></div></div>`:''}
+        ${isLatest?`<div class="ib-pill" style="background:var(--green-l);border-color:var(--green-m)"><div><div class="pv" style="color:var(--green)">${G.kcal}</div><div class="pl">Kcal cíl / den</div></div></div>`:''}
+      </div>
+    </div>`;
+  });
+  existing.innerHTML = html;
+}
+
+function deleteInbody(date) {
+  if (!confirm('Smazat toto InBody měření?')) return;
+  const arr = loadInbody().filter(m => m.date !== date);
+  saveInbodyData(arr);
+  applyLatestInbody();
+  applyGoalsFromProfil(); // apply cíl + kroky settings on top of BMR
+  const ibDateEl = document.getElementById('ibDate'); if(ibDateEl) ibDateEl.value = todayStr();
+  updateIbGoalsDisplay();
+  renderInbodyHistory();
+  render();
+}
+
+// Add live preview on BMR input
+window.addEventListener('load', () => {
+  const bmrInp = document.getElementById('ibBmr');
+  if (bmrInp) bmrInp.addEventListener('input', previewInbody);
+  const svalyInp = document.getElementById('ibSvaly');
+  if (svalyInp) svalyInp.addEventListener('input', previewInbody);
+  updateIbGoalsDisplay();
+  renderInbodyHistory();
+}, {once:false});
+
+
+// ═══ EDIT FOOD MODAL ════════════════════════════════
+let editingId = null;
+let editRating = 4;
+
+function openEditModal(id) {
+  const f = day(cur).foods.find(x => x.id == id);
+  if (!f) return;
+  editingId = id;
+  editRating = f.rating || 4;
+
+  document.getElementById('eName').value  = f.name  || '';
+  document.getElementById('eMeal').value  = f.meal  || 'Jídlo';
+  document.getElementById('eNote').value  = f.note  || '';
+  document.getElementById('eKcal').value  = f.kcal  || '';
+  document.getElementById('eProt').value  = f.prot  || '';
+  document.getElementById('eCarb').value  = f.carb  || '';
+  document.getElementById('eFat').value   = f.fat   || '';
+
+  renderEditStars();
+  document.getElementById('editModal').classList.remove('hidden');
+  document.getElementById('eName').focus();
+}
+
+function renderEditStars() {
+  const el = document.getElementById('eStars');
+  el.innerHTML = '';
+  for (let i=1; i<=5; i++) {
+    const s = document.createElement('span');
+    s.textContent = '★';
+    s.style.cssText = `opacity:${editRating>=i?1:.2};transition:opacity .1s;margin-right:2px`;
+    s.onclick = () => { editRating=i; renderEditStars(); };
+    el.appendChild(s);
+  }
+}
+
+function closeEditModal(e) {
+  if (e && e.target !== document.getElementById('editModal')) return;
+  document.getElementById('editModal').classList.add('hidden');
+  editingId = null;
+}
+
+function saveEdit() {
+  if (!editingId) return;
+  const foods = day(cur).foods;
+  const idx = foods.findIndex(f => f.id == editingId);
+  if (idx === -1) return;
+
+  const name = document.getElementById('eName').value.trim();
+  const kcal = +document.getElementById('eKcal').value;
+  if (!name || !kcal) return;
+
+  foods[idx] = {
+    ...foods[idx],
+    name,
+    meal:   document.getElementById('eMeal').value,
+    note:   document.getElementById('eNote').value.trim(),
+    kcal,
+    prot:   +document.getElementById('eProt').value || 0,
+    carb:   +document.getElementById('eCarb').value || 0,
+    fat:    +document.getElementById('eFat').value  || 0,
+    rating: editRating
+  };
+
+  persist();
+  document.getElementById('editModal').classList.add('hidden');
+  editingId = null;
+  render();
+}
+
+// escape handled in JSON modal JS
+
+
+// ═══ JSON IMPORT ════════════════════════════════════
+let jsonParsed = [];
+
+function openJsonModal() {
+  document.getElementById('jsonInput').value = '';
+  document.getElementById('jsonPreview').innerHTML = '';
+  document.getElementById('jsonErr').style.display = 'none';
+  document.getElementById('jsonAddBtn').style.display = 'none';
+  jsonParsed = [];
+  document.getElementById('jsonModal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('jsonInput').focus(), 100);
+}
+
+function closeJsonModal(e) {
+  if (e && e.target !== document.getElementById('jsonModal')) return;
+  document.getElementById('jsonModal').classList.add('hidden');
+}
+
+function previewJson() {
+  const raw = document.getElementById('jsonInput').value.trim();
+  const errEl = document.getElementById('jsonErr');
+  const previewEl = document.getElementById('jsonPreview');
+  const addBtn = document.getElementById('jsonAddBtn');
+  errEl.style.display = 'none';
+  previewEl.innerHTML = '';
+  addBtn.style.display = 'none';
+  jsonParsed = [];
+
+  if (!raw) return;
+
+  try {
+    let parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) parsed = [parsed]; // single item support
+
+    const valid = parsed.filter(f => f.name && (f.kcal !== undefined));
+    if (!valid.length) throw new Error('Žádná platná jídla');
+
+    jsonParsed = valid;
+    let html = '';
+    valid.forEach(f => {
+      const meal = f.meal || 'Jídlo';
+      const mealIco = {'Snídaně':'☀️','Dopolední svačina':'🍎','Oběd':'🥗','Odpolední svačina':'🍌','Večeře':'🌙','Nápoj / jiné':'💧'}[meal] || '🍴';
+      html += `<div class="json-preview-item">
+        <div>
+          <div class="json-preview-name">${f.name}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">${mealIco} ${meal} &nbsp;·&nbsp; B:${f.prot||0}g S:${f.carb||0}g T:${f.fat||0}g</div>
+        </div>
+        <div class="json-preview-kcal">${Math.round(f.kcal)} kcal</div>
+      </div>`;
+    });
+    previewEl.innerHTML = html;
+    document.getElementById('jsonCount').textContent = valid.length;
+    addBtn.style.display = '';
+
+  } catch(e) {
+    errEl.textContent = '✗ Neplatný formát — zkopíruj JSON přesně jak ho pošlu';
+    errEl.style.display = '';
+  }
+}
+
+function addFromJson() {
+  if (!jsonParsed.length) return;
+  jsonParsed.forEach(f => {
+    day(cur).foods.push({
+      id: Date.now() + Math.random(),
+      name:   f.name   || '',
+      meal:   f.meal   || 'Jídlo',
+      kcal:   +f.kcal  || 0,
+      prot:   +f.prot  || 0,
+      carb:   +f.carb  || 0,
+      fat:    +f.fat   || 0,
+      rating: +f.rating|| 4,
+      note:   f.note   || ''
+    });
+  });
+  persist();
+  document.getElementById('jsonModal').classList.add('hidden');
+  render();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.getElementById('jsonModal')?.classList.add('hidden');
+    document.getElementById('editModal')?.classList.add('hidden');
+  }
+});
+
+
+// ═══ INBODY FORM TOGGLE ══════════════════════════════
+function toggleIbForm() {
+  const body = document.getElementById('ibFormBody');
+  const icon = document.getElementById('ibFormToggleIcon');
+  const open = body.style.display === 'none';
+  body.style.display = open ? '' : 'none';
+  icon.textContent = open ? '－' : '﹢';
+  if (open) {
+    const ibDateEl = document.getElementById('ibDate');
+    if (ibDateEl && !ibDateEl.value) ibDateEl.value = todayStr();
+  }
+}
+
+// ═══ NASTAVENÍ (PROFIL) ══════════════════════════════
+const PROF_KEY = 'denik_profil';
+
+// cíl: 0=zhubnout+udržet, 1=rekomp, 2=bulk, 3=udržet
+// kroky: 0=3000, 1=6000, 2=10000, 3=15000
+// aktivita: 0=sedavý(1.2), 1=lehce(1.375), 2=středně(1.55), 3=velmi(1.725)
+const CIL_DEFS = [
+  { deficit: -350, protMult: 1.8, label: 'Zhubnout tuk, udržet svaly' },
+  { deficit: -150, protMult: 2.0, label: 'Rekomp (zhubnout + nabrat)' },
+  { deficit: +200, protMult: 2.0, label: 'Nabrat svaly (bulk)' },
+  { deficit:    0, protMult: 1.6, label: 'Udržet váhu' },
+];
+const KROKY_DEFS = [
+  { kroky: 3000,  kcal: 120,  neat: 120 },
+  { kroky: 6000,  kcal: 240,  neat: 200 },
+  { kroky: 10000, kcal: 400,  neat: 285 },
+  { kroky: 15000, kcal: 600,  neat: 350 },
+];
+// PAL koeficienty (Harris-Benedict / Mifflin standard)
+const AKT_DEFS = [
+  { pal: 1.2,   label: 'Sedavý'         },
+  { pal: 1.375, label: 'Lehce aktivní'  },
+  { pal: 1.55,  label: 'Středně aktivní'},
+  { pal: 1.725, label: 'Velmi aktivní'  },
+];
+
+function loadProfil() {
+  try { const r = localStorage.getItem(PROF_KEY); return r ? JSON.parse(r) : {vek:27, vyska:170, pohlavi:'zena', cil:0, kroky:2}; }
+  catch { return {vek:27, vyska:170, pohlavi:'zena', cil:0, kroky:2}; }
+}
+function saveProfil(p) { localStorage.setItem(PROF_KEY, JSON.stringify(p)); }
+
+let _pohlavi = 'zena';
+let _cil     = 0;
+let _kroky   = 2; // index do KROKY_DEFS
+let _aktivita = 0; // index do AKT_DEFS
+
+function hlBtn(id, active, col) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (active) {
+    el.style.cssText = `text-align:left;padding:10px 14px;border-color:${col};color:${col};background:${col}22`;
+  } else {
+    el.style.cssText = 'text-align:left;padding:10px 14px';
+  }
+}
+function hlBtnSm(id, active, col) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (active) {
+    el.style.cssText = `flex:1;min-width:70px;border-color:${col};color:${col};background:${col}22`;
+  } else {
+    el.style.cssText = 'flex:1;min-width:70px';
+  }
+}
+
+function selectPohlavi(p) {
+  _pohlavi = p;
+  document.getElementById('setPhlZena').style.cssText = p==='zena' ? 'flex:1;border-color:var(--green);color:var(--green);background:var(--green-l)' : 'flex:1';
+  document.getElementById('setPhlMuz').style.cssText  = p==='muz'  ? 'flex:1;border-color:var(--blue);color:var(--blue);background:var(--blue-l)' : 'flex:1';
+  previewNastaveni();
+}
+
+function selectCil(i) {
+  _cil = i;
+  const cols = ['var(--green)','var(--blue)','var(--purple)','var(--orange)'];
+  [0,1,2,3].forEach(j => hlBtn('cilBtn'+j, j===i, cols[j]));
+  previewNastaveni();
+}
+
+function selectKroky(i) {
+  _kroky = i;
+  const col = 'var(--orange)';
+  [0,1,2,3].forEach(j => hlBtnSm('krkBtn'+j, j===i, col));
+  previewNastaveni();
+}
+
+function selectAktivita(i) {
+  _aktivita = i;
+  const col = 'var(--purple)';
+  [0,1,2,3].forEach(j => hlBtn('aktBtn'+j, j===i, col));
+  previewNastaveni();
+}
+
+function mifflinBmr(vek, vyska, pohlavi) {
+  const arr = loadInbody();
+  const vaha = arr.length ? arr[0].vaha : 80;
+  if (pohlavi === 'muz') return Math.round(10*vaha + 6.25*vyska - 5*vek + 5);
+  return Math.round(10*vaha + 6.25*vyska - 5*vek - 161);
+}
+
+function calcGoals(bmr, cilIdx, krokyIdx, aktIdx) {
+  const kd   = KROKY_DEFS[krokyIdx  ?? 2];
+  const cd   = CIL_DEFS[cilIdx      ?? 0];
+  const ad   = AKT_DEFS[aktIdx      ?? 0];
+  // TDEE = BMR × PAL (zahrnuje trénink) + kroky nad základní sedavý pohyb
+  // Kroky jsou "extra NEAT" nad rámec PAL koeficientu
+  const tdee = Math.round(bmr * ad.pal);
+  const burn = tdee + kd.kcal;
+  const kcal = burn + cd.deficit;
+  const arr  = loadInbody();
+  const svaly = arr.length ? arr[0].svaly : 27;
+  const prot  = Math.round(svaly * cd.protMult);
+  return { burn, kcal, prot, deficit: cd.deficit, neat: kd.neat, steps10k: kd.kcal, pal: ad.pal };
+}
+
+function previewNastaveni() {
+  const vek   = +document.getElementById('setVek').value;
+  const vyska = +document.getElementById('setVyska').value;
+  if (!vek || !vyska) { document.getElementById('setPreview').style.display='none'; return; }
+
+  const ibArr = loadInbody();
+  const bmr = ibArr.length ? ibArr[0].bmr : mifflinBmr(vek, vyska, _pohlavi);
+  const g   = calcGoals(bmr, _cil, _kroky, _aktivita);
+  const defStr = g.deficit === 0 ? '0 kcal' : (g.deficit > 0 ? '+' : '')+g.deficit+' kcal';
+
+  document.getElementById('setPreviewBmr').textContent  = bmr.toLocaleString('cs') + ' kcal';
+  document.getElementById('setPreviewBurn').textContent = g.burn.toLocaleString('cs');
+  document.getElementById('setPreviewKcal').textContent = g.kcal.toLocaleString('cs');
+  document.getElementById('setPreviewProt').textContent = g.prot + 'g';
+  document.getElementById('setPreviewDef').textContent  = defStr;
+  document.getElementById('setPreview').style.display = '';
+}
+
+function loadNastaveniForm() {
+  const p = loadProfil();
+  _pohlavi  = p.pohlavi  || 'zena';
+  _cil      = p.cil      ?? 0;
+  _kroky    = p.kroky    ?? 2;
+  _aktivita = p.aktivita ?? 0;
+  document.getElementById('setVek').value   = p.vek   || '';
+  document.getElementById('setVyska').value = p.vyska || '';
+  selectPohlavi(_pohlavi);
+  selectCil(_cil);
+  selectKroky(_kroky);
+  selectAktivita(_aktivita);
+  previewNastaveni();
+}
+
+function applyGoalsFromProfil() {
+  const p = loadProfil();
+  const cil      = p.cil      ?? 0;
+  const kroky    = p.kroky    ?? 2;
+  const aktivita = p.aktivita ?? 0;
+  const kd = KROKY_DEFS[kroky];
+  G.neat     = kd.neat;
+  G.steps10k = kd.kcal;
+  const g = calcGoals(G.bmr, cil, kroky, aktivita);
+  G.kcal = g.kcal;
+  G.prot = g.prot;
+  BASE_BURN = Math.round(G.bmr * AKT_DEFS[aktivita].pal) + G.steps10k;
+}
+
+function saveNastaveni() {
+  const vek   = +document.getElementById('setVek').value;
+  const vyska = +document.getElementById('setVyska').value;
+  const err   = document.getElementById('setErr');
+  err.style.display = 'none';
+  if (!vek || vek < 10 || vek > 100)   { err.textContent='Zadej platný věk (10–100)'; err.style.display=''; return; }
+  if (!vyska || vyska < 100 || vyska > 250) { err.textContent='Zadej platnou výšku (100–250 cm)'; err.style.display=''; return; }
+
+  saveProfil({ vek, vyska, pohlavi: _pohlavi, cil: _cil, kroky: _kroky, aktivita: _aktivita });
+
+  // Přepočítej BMR z Mifflin pokud není InBody
+  const ibArr = loadInbody();
+  if (!ibArr.length) {
+    G.bmr = mifflinBmr(vek, vyska, _pohlavi);
+  }
+  applyGoalsFromProfil();
+  updateIbGoalsDisplay();
+  render();
+
+  const ok = document.getElementById('setOk');
+  ok.style.display = '';
+  setTimeout(() => ok.style.display='none', 2200);
+}
+
+// Načti profil při startu + přidej live preview
+window.addEventListener('load', () => {
+  loadNastaveniForm();
+  ['setVek','setVyska'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', previewNastaveni);
+  });
+}, {once: false});
+
+</script>
+</body>
+</html>
