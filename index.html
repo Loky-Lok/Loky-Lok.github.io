@@ -369,10 +369,10 @@ select.inp{cursor:pointer;appearance:none;background-image:url("data:image/svg+x
         </div>
       </div>
       <div class="mbars">
-        <div class="mbar"><div class="mbar-top"><span class="mbar-n">BÍLKOVINY</span><span class="mbar-v"><span id="bP">0</span> / 130g</span></div><div class="mbar-track"><div class="mbar-fill" id="barP" style="width:0%;background:var(--blue)"></div></div></div>
-        <div class="mbar"><div class="mbar-top"><span class="mbar-n">SACHARIDY</span><span class="mbar-v"><span id="bC">0</span> / 160g</span></div><div class="mbar-track"><div class="mbar-fill" id="barC" style="width:0%;background:var(--orange)"></div></div></div>
-        <div class="mbar"><div class="mbar-top"><span class="mbar-n">TUKY</span><span class="mbar-v"><span id="bF">0</span> / 55g</span></div><div class="mbar-track"><div class="mbar-fill" id="barF" style="width:0%;background:var(--purple)"></div></div></div>
-        <div class="mbar"><div class="mbar-top"><span class="mbar-n">KALORIE</span><span class="mbar-v"><span id="bK">0</span> / 1 750 kcal</span></div><div class="mbar-track"><div class="mbar-fill" id="barK" style="width:0%;background:var(--green)"></div></div></div>
+        <div class="mbar"><div class="mbar-top"><span class="mbar-n">BÍLKOVINY</span><span class="mbar-v"><span id="bP">0</span> / <span id="barLblP">130g</span></span></div><div class="mbar-track"><div class="mbar-fill" id="barP" style="width:0%;background:var(--blue)"></div></div></div>
+        <div class="mbar"><div class="mbar-top"><span class="mbar-n">SACHARIDY</span><span class="mbar-v"><span id="bC">0</span> / <span id="barLblC">160g</span></span></div><div class="mbar-track"><div class="mbar-fill" id="barC" style="width:0%;background:var(--orange)"></div></div></div>
+        <div class="mbar"><div class="mbar-top"><span class="mbar-n">TUKY</span><span class="mbar-v"><span id="bF">0</span> / <span id="barLblF">55g</span></span></div><div class="mbar-track"><div class="mbar-fill" id="barF" style="width:0%;background:var(--purple)"></div></div></div>
+        <div class="mbar"><div class="mbar-top"><span class="mbar-n">KALORIE</span><span class="mbar-v"><span id="bK">0</span> / <span id="barLblK">1 750 kcal</span></span></div><div class="mbar-track"><div class="mbar-fill" id="barK" style="width:0%;background:var(--green)"></div></div></div>
       </div>
       <div class="div"></div>
       <div class="goal-list">
@@ -805,26 +805,32 @@ select.inp{cursor:pointer;appearance:none;background-image:url("data:image/svg+x
       <div style="display:flex;flex-direction:column;gap:7px">
         <button id="aktBtn0" class="btn akt-btn" onclick="selectAktivita(0)" style="text-align:left;padding:10px 14px">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><div style="font-weight:700;font-size:12px">🪑 Sedavý</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Kancelář, minimum pohybu, žádné sporty</div></div>
+            <div><div style="font-weight:700;font-size:12px">🪑 Sedavý typ</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Minimum pohybu, kancelář, žádné sporty</div></div>
             <div style="font-family:var(--serif);font-size:15px;color:var(--muted);flex-shrink:0;margin-left:8px">× 1,2</div>
           </div>
         </button>
         <button id="aktBtn1" class="btn akt-btn" onclick="selectAktivita(1)" style="text-align:left;padding:10px 14px">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><div style="font-weight:700;font-size:12px">🚶 Lehce aktivní</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Sport 1–2× týdně nebo aktivní zaměstnání</div></div>
+            <div><div style="font-weight:700;font-size:12px">🚶 Lehce aktivní typ</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Trénink 1–3× týdně</div></div>
             <div style="font-family:var(--serif);font-size:15px;color:var(--muted);flex-shrink:0;margin-left:8px">× 1,375</div>
           </div>
         </button>
         <button id="aktBtn2" class="btn akt-btn" onclick="selectAktivita(2)" style="text-align:left;padding:10px 14px">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><div style="font-weight:700;font-size:12px">🏃 Středně aktivní</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Sport 3–5× týdně, středně intenzivní</div></div>
+            <div><div style="font-weight:700;font-size:12px">🏃 Aktivní typ</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Trénink 3–5× týdně</div></div>
             <div style="font-family:var(--serif);font-size:15px;color:var(--muted);flex-shrink:0;margin-left:8px">× 1,55</div>
           </div>
         </button>
         <button id="aktBtn3" class="btn akt-btn" onclick="selectAktivita(3)" style="text-align:left;padding:10px 14px">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><div style="font-weight:700;font-size:12px">💪 Velmi aktivní</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Tvrdý trénink 6–7× týdně</div></div>
+            <div><div style="font-weight:700;font-size:12px">💪 Velmi aktivní typ</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Trénink 6–7× týdně</div></div>
             <div style="font-family:var(--serif);font-size:15px;color:var(--muted);flex-shrink:0;margin-left:8px">× 1,725</div>
+          </div>
+        </button>
+        <button id="aktBtn4" class="btn akt-btn" onclick="selectAktivita(4)" style="text-align:left;padding:10px 14px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><div style="font-weight:700;font-size:12px">🔥 Extra aktivní typ</div><div style="font-size:10px;color:var(--muted);margin-top:2px">Každodenní intenzivní trénink nebo fyzicky náročná práce</div></div>
+            <div style="font-family:var(--serif);font-size:15px;color:var(--muted);flex-shrink:0;margin-left:8px">× 1,9</div>
           </div>
         </button>
       </div>
@@ -918,9 +924,8 @@ function applyLatestInbody() {
   G.bmr = latest.bmr;
   // Goals are recalculated by applyGoalsFromProfil() which reads cíl+kroky settings
   // Called after loadProfil is available (boot order: applyLatestInbody → applyGoalsFromProfil)
-  // Goals properly computed in applyGoalsFromProfil() called right after
+  // Goals properly computed in applyGoalsFromProfil() called right after — don't set G.prot here
   BASE_BURN = G.bmr + G.neat + G.steps10k; // will be updated by applyGoalsFromProfil
-  G.prot = Math.round(latest.svaly * 1.8); // fallback until applyGoalsFromProfil runs
 }
 
 const MEALS = ['Snídaně','Dopolední svačina','Oběd','Odpolední svačina','Večeře','Nápoj / jiné'];
@@ -1142,10 +1147,16 @@ function render() {
   set('mF', totF.toFixed(0)+'g'); set('bF', totF.toFixed(0));
   set('bK', Math.round(totK));
 
-  // Macro bars
-  const cl=(v,m)=>Math.min(100,Math.round(v/m*100));
+  // Macro bars — dynamicky aktualizovat i cílové labely
+  const cl=(v,m)=>m>0?Math.min(100,Math.round(v/m*100)):0;
   bar('barP',cl(totP,G.prot)); bar('barC',cl(totC,G.carb));
   bar('barF',cl(totF,G.fat));  bar('barK',cl(totK,G.kcal));
+  // Aktualizovat labely cílů v macro barech
+  const setBarLabel = (id, val, unit) => { const e=document.getElementById(id); if(e) e.textContent=val+unit; };
+  setBarLabel('barLblP', G.prot, 'g');
+  setBarLabel('barLblC', G.carb, 'g');
+  setBarLabel('barLblF', G.fat,  'g');
+  setBarLabel('barLblK', G.kcal.toLocaleString('cs'), ' kcal');
 
   // Macro pill
   const mp=document.getElementById('macroPill');
@@ -2118,10 +2129,10 @@ const PROF_KEY = 'denik_profil';
 // kroky: 0=3000, 1=6000, 2=10000, 3=15000
 // aktivita: 0=sedavý(1.2), 1=lehce(1.375), 2=středně(1.55), 3=velmi(1.725)
 const CIL_DEFS = [
-  { deficit: -350, protMult: 1.8, label: 'Zhubnout tuk, udržet svaly' },
-  { deficit: -150, protMult: 2.0, label: 'Rekomp (zhubnout + nabrat)' },
-  { deficit: +200, protMult: 2.0, label: 'Nabrat svaly (bulk)' },
-  { deficit:    0, protMult: 1.6, label: 'Udržet váhu' },
+  { deficit: -350, protMult: 1.6, label: 'Zhubnout tuk, udržet svaly' },  // 1.6g/kg těl. hmotnosti
+  { deficit: -150, protMult: 1.8, label: 'Rekomp (zhubnout + nabrat)' },  // 1.8g/kg
+  { deficit: +200, protMult: 1.8, label: 'Nabrat svaly (bulk)' },          // 1.8g/kg
+  { deficit:    0, protMult: 1.4, label: 'Udržet váhu' },                  // 1.4g/kg
 ];
 const KROKY_DEFS = [
   { kroky: 3000,  kcal: 120,  neat: 120 },
@@ -2129,12 +2140,13 @@ const KROKY_DEFS = [
   { kroky: 10000, kcal: 400,  neat: 285 },
   { kroky: 15000, kcal: 600,  neat: 350 },
 ];
-// PAL koeficienty (Harris-Benedict / Mifflin standard)
+// PAL koeficienty dle GymBeam / Harris-Benedict
 const AKT_DEFS = [
-  { pal: 1.2,   label: 'Sedavý'         },
-  { pal: 1.375, label: 'Lehce aktivní'  },
-  { pal: 1.55,  label: 'Středně aktivní'},
-  { pal: 1.725, label: 'Velmi aktivní'  },
+  { pal: 1.2,   label: 'Sedavý',          desc: 'Minimum pohybu, kancelář'             },
+  { pal: 1.375, label: 'Lehce aktivní',   desc: 'Trénink 1–3× týdně'                  },
+  { pal: 1.55,  label: 'Aktivní',         desc: 'Trénink 3–5× týdně'                  },
+  { pal: 1.725, label: 'Velmi aktivní',   desc: 'Trénink 6–7× týdně'                  },
+  { pal: 1.9,   label: 'Extra aktivní',   desc: 'Každodenní intenzivní trénink nebo fyzicky náročná práce' },
 ];
 
 function loadProfil() {
@@ -2191,7 +2203,7 @@ function selectKroky(i) {
 function selectAktivita(i) {
   _aktivita = i;
   const col = 'var(--purple)';
-  [0,1,2,3].forEach(j => hlBtn('aktBtn'+j, j===i, col));
+  [0,1,2,3,4].forEach(j => hlBtn('aktBtn'+j, j===i, col));
   previewNastaveni();
 }
 
@@ -2212,8 +2224,9 @@ function calcGoals(bmr, cilIdx, krokyIdx, aktIdx) {
   const burn = tdee + kd.kcal;
   const kcal = burn + cd.deficit;
   const arr  = loadInbody();
-  const svaly = arr.length ? arr[0].svaly : 27;
-  const prot  = Math.round(svaly * cd.protMult);
+  // Protein cíl z celkové tělesné hmotnosti (ne ze svalů) — dává realistické hodnoty
+  const vaha = arr.length ? arr[0].vaha : 83;
+  const prot = Math.round(vaha * cd.protMult);
   return { burn, kcal, prot, deficit: cd.deficit, neat: kd.neat, steps10k: kd.kcal, pal: ad.pal };
 }
 
@@ -2258,9 +2271,19 @@ function applyGoalsFromProfil() {
   const kd = KROKY_DEFS[kroky];
   G.neat     = kd.neat;
   G.steps10k = kd.kcal;
+  // Pokud není InBody, přepočítej BMR z profilu (pohlaví + věk + výška)
+  const ibArr = loadInbody();
+  if (!ibArr.length && p.vek && p.vyska) {
+    G.bmr = mifflinBmr(p.vek, p.vyska, p.pohlavi || 'zena');
+  }
   const g = calcGoals(G.bmr, cil, kroky, aktivita);
   G.kcal = g.kcal;
   G.prot = g.prot;
+  // Dopočítat carb a fat ze zbytku kalorií (fixní hodnoty ze startu se jinak nikdy neaktualizují)
+  const protKcal = G.prot * 4;
+  const fatKcal  = Math.round(G.kcal * 0.27);
+  G.fat  = Math.round(fatKcal / 9);
+  G.carb = Math.max(80, Math.round((G.kcal - protKcal - fatKcal) / 4));
   BASE_BURN = Math.round(G.bmr * AKT_DEFS[aktivita].pal) + G.steps10k;
 }
 
