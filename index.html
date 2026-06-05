@@ -93,7 +93,7 @@ input[type="date"]:focus{border-color:var(--green)}
 .sc-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sc-track{height:7px;background:var(--bg3);border-radius:5px;position:relative;margin-bottom:0}
 .sc-mark{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:var(--green);border-radius:2px;z-index:2}
-.sc-mark::after{content:'10k';position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;color:var(--green);white-space:nowrap}
+.sc-mark::after{content:attr(data-label);position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;color:var(--green);white-space:nowrap}
 .sc-fill{height:100%;border-radius:5px;transition:width .6s ease}
 /* row 1: input + button */
 .sc-row1{display:flex;align-items:center;gap:8px;margin-top:10px}
@@ -131,8 +131,9 @@ input[type="date"]:focus{border-color:var(--green)}
 .modal-actions button{flex:1}
 
 /* TABS */
-.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:20px}
-.tab{padding:9px 15px;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;user-select:none}
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:20px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:9px 10px;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;user-select:none;white-space:nowrap;flex-shrink:0}
 .tab:hover{color:var(--text2)}
 .tab.on{color:var(--green);border-bottom-color:var(--green)}
 .tab-pane{display:none}
@@ -325,7 +326,7 @@ select.inp{cursor:pointer;appearance:none;background-image:url("data:image/svg+x
   <div class="sc-info" style="flex:1;min-width:0">
     <div class="sc-lbl">Kroky — 10 000 je v základním výdeji</div>
     <div class="sc-track">
-      <div class="sc-mark"></div>
+      <div class="sc-mark" data-label="10k"></div>
       <div class="sc-fill" id="scFill" style="width:0%"></div>
     </div>
     <div class="sc-row1">
@@ -895,7 +896,7 @@ select.inp{cursor:pointer;appearance:none;background-image:url("data:image/svg+x
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 // ═══ CONSTANTS ══════════════════════════════════
-let G = { kcal:1750, prot:130, carb:160, fat:55, bmr:1426, neat:285, steps10k:400, sPerKcal:0.04 };
+let G = { kcal:1750, prot:130, carb:160, fat:55, bmr:1426, neat:285, steps10k:400, sPerKcal:0.04, krokyTarget:10000 };
 let BASE_BURN = G.bmr + G.neat + G.steps10k; // recalculated when new InBody added
 const IB_KEY = 'denik_inbody';
 
@@ -964,6 +965,18 @@ const SEED_VERSION = '2026-05-31-v1';
 window.addEventListener('load', () => {
   applyLatestInbody();
   applyGoalsFromProfil(); // apply cíl + kroky settings on top of BMR
+  // Pokud máme v Mírách váhu novější než poslední InBody, přepočítat BMR
+  (function() {
+    const ibArr = loadInbody();
+    if (!ibArr.length) return;
+    const miry = loadMiry().filter(m => m.vaha);
+    if (!miry.length) return;
+    const nejnovejsiVaha = miry[0]; // sorted newest first
+    if (nejnovejsiVaha.date > ibArr[0].date) {
+      recalcBmrFromVaha(nejnovejsiVaha.vaha);
+    }
+  })();
+  updateIbGoalsDisplay();
   const ibDateEl = document.getElementById('ibDate'); if(ibDateEl) ibDateEl.value = todayStr();
   try { const r = localStorage.getItem('denik4'); if(r) S = JSON.parse(r); } catch(e){}
 
@@ -1097,20 +1110,30 @@ function syncSteps() {
 }
 
 function updateStepsUI(s) {
-  const kcalT=Math.round(s*G.sPerKcal);
-  const bon=Math.max(0,s-10000);
-  const bonK=Math.round(bon*G.sPerKcal);
-  document.getElementById('slKcal').textContent=kcalT;
-  const pct=Math.min(100,Math.round(s/20000*100));
-  const fill=document.getElementById('scFill');
-  fill.style.width=pct+'%';
-  fill.style.background=s>=10000?'linear-gradient(90deg,var(--orange),var(--green))':'linear-gradient(90deg,var(--orange),#e07b00)';
-  const bon_el=document.getElementById('slBonus');
-  if (bon>0){bon_el.style.display='';document.getElementById('slBonusVal').textContent=bonK;}
-  else bon_el.style.display='none';
+  const target = G.krokyTarget || 10000;
+  const maxBar = target * 2; // 100% slideru = 2× cíl
+  const kcalT  = Math.round(s * G.sPerKcal);
+  const bon    = Math.max(0, s - target);
+  const bonK   = Math.round(bon * G.sPerKcal);
+  document.getElementById('slKcal').textContent = kcalT;
+  const pct  = Math.min(100, Math.round(s / maxBar * 100));
+  const fill = document.getElementById('scFill');
+  fill.style.width = pct + '%';
+  fill.style.background = s >= target
+    ? 'linear-gradient(90deg,var(--orange),var(--green))'
+    : 'linear-gradient(90deg,var(--orange),#e07b00)';
+  // Posunout značku na správnou pozici (target / maxBar = 50% vždy, ale label se mění)
+  const mark = document.querySelector('.sc-mark');
+  if (mark) mark.setAttribute('data-label', target >= 1000 ? (target/1000)+'k' : target);
+  const bon_el = document.getElementById('slBonus');
+  if (bon > 0) { bon_el.style.display=''; document.getElementById('slBonusVal').textContent = bonK; }
+  else bon_el.style.display = 'none';
+  // Aktualizovat label nad sliderem
+  const lbl = document.querySelector('.sc-lbl');
+  if (lbl) lbl.textContent = 'Kroky — ' + target.toLocaleString('cs') + ' je v základním výdeji';
 }
 
-function bonusKcal(s) { return Math.round(Math.max(0,s-10000)*G.sPerKcal); }
+function bonusKcal(s) { return Math.round(Math.max(0,s-(G.krokyTarget||10000))*G.sPerKcal); }
 
 // ═══ RENDER ══════════════════════════════════════
 function render() {
@@ -1558,6 +1581,21 @@ function saveMiryData(arr) {
   localStorage.setItem(MIRY_KEY, JSON.stringify(arr));
 }
 
+function recalcBmrFromVaha(novaVaha) {
+  const ibArr = loadInbody();
+  if (!ibArr.length) return; // bez InBody neinterpolujeme
+  const ibVaha = ibArr[0].vaha;
+  const ibBmr  = ibArr[0].bmr;
+  if (!ibVaha || !ibBmr || novaVaha <= 0) return;
+  // Lineární škálování: váha klesla o X% → BMR klesne o X%
+  // (přibližný odhad — přesné by vyžadovalo nové InBody)
+  const ratio = novaVaha / ibVaha;
+  G.bmr = Math.round(ibBmr * ratio);
+  applyGoalsFromProfil();
+  updateIbGoalsDisplay();
+  render();
+}
+
 function saveMiry() {
   const vaha  = parseFloat(document.getElementById('mVaha').value)  || null;
   const pas   = parseFloat(document.getElementById('mPas').value)   || null;
@@ -1584,6 +1622,8 @@ function saveMiry() {
 
   renderMiryLog();
   renderMiryCharts();
+  // Přepočítat BMR podle nové váhy (interpolace od InBody)
+  if (vaha) recalcBmrFromVaha(vaha);
 }
 
 function deleteMiry(date) {
@@ -1839,6 +1879,18 @@ function saveNewInbody() {
   // Apply new values immediately
   applyLatestInbody();
   applyGoalsFromProfil(); // apply cíl + kroky settings on top of BMR
+  // Pokud máme v Mírách váhu novější než poslední InBody, přepočítat BMR
+  (function() {
+    const ibArr = loadInbody();
+    if (!ibArr.length) return;
+    const miry = loadMiry().filter(m => m.vaha);
+    if (!miry.length) return;
+    const nejnovejsiVaha = miry[0]; // sorted newest first
+    if (nejnovejsiVaha.date > ibArr[0].date) {
+      recalcBmrFromVaha(nejnovejsiVaha.vaha);
+    }
+  })();
+  updateIbGoalsDisplay();
   const ibDateEl = document.getElementById('ibDate'); if(ibDateEl) ibDateEl.value = todayStr();
   updateIbGoalsDisplay();
 
@@ -1847,27 +1899,25 @@ function saveNewInbody() {
   document.getElementById('ibPreview').style.display = 'none';
 
   renderInbodyHistory();
+  updateIbGoalsDisplay();
   render(); // re-render everything with new BMR/goals
 }
 
 function updateIbGoalsDisplay() {
-  document.getElementById('ibcBmr').textContent  = G.bmr.toLocaleString('cs') + ' kcal';
-  document.getElementById('ibcBurn').textContent = BASE_BURN.toLocaleString('cs');
-  document.getElementById('ibcKcal').textContent = G.kcal.toLocaleString('cs');
-  document.getElementById('ibcProt').textContent = G.prot + 'g';
-  const deficit = BASE_BURN - G.kcal;
-  document.getElementById('ibcDeficit').textContent = '−' + deficit.toLocaleString('cs') + ' kcal';
-  // also update KPI hint
-  const kpis = document.querySelector('.kpi .ks');
-  if (document.getElementById('kK')) {
-    document.querySelectorAll('.kpi')[0].querySelector('.ks').textContent = 'cíl: ' + G.kcal.toLocaleString('cs') + ' kcal';
-  }
-  // update macro bars label
-  const bkEl = document.getElementById('bK');
-  if (bkEl) {
-    const parent = bkEl.closest('.mbar-top');
-    if (parent) parent.querySelector('.mbar-v').innerHTML = `<span id="bK">${bkEl.textContent}</span> / ${G.kcal.toLocaleString('cs')} kcal`;
-  }
+  const se = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+  se('ibcBmr',    G.bmr.toLocaleString('cs') + ' kcal');
+  se('ibcBurn',   BASE_BURN.toLocaleString('cs'));
+  se('ibcKcal',   G.kcal.toLocaleString('cs'));
+  se('ibcProt',   G.prot + 'g');
+  se('ibcDeficit','−' + (BASE_BURN - G.kcal).toLocaleString('cs') + ' kcal');
+  // KPI hint nahoře
+  const ks = document.querySelectorAll('.kpi')[0]?.querySelector('.ks');
+  if (ks) ks.textContent = 'cíl: ' + G.kcal.toLocaleString('cs') + ' kcal';
+  // Makro bar labely — použít id přímo, nemazat innerHTML
+  se('barLblK', G.kcal.toLocaleString('cs') + ' kcal');
+  se('barLblP', G.prot + 'g');
+  se('barLblC', G.carb + 'g');
+  se('barLblF', G.fat  + 'g');
 }
 
 function renderInbodyHistory() {
@@ -1932,6 +1982,18 @@ function deleteInbody(date) {
   saveInbodyData(arr);
   applyLatestInbody();
   applyGoalsFromProfil(); // apply cíl + kroky settings on top of BMR
+  // Pokud máme v Mírách váhu novější než poslední InBody, přepočítat BMR
+  (function() {
+    const ibArr = loadInbody();
+    if (!ibArr.length) return;
+    const miry = loadMiry().filter(m => m.vaha);
+    if (!miry.length) return;
+    const nejnovejsiVaha = miry[0]; // sorted newest first
+    if (nejnovejsiVaha.date > ibArr[0].date) {
+      recalcBmrFromVaha(nejnovejsiVaha.vaha);
+    }
+  })();
+  updateIbGoalsDisplay();
   const ibDateEl = document.getElementById('ibDate'); if(ibDateEl) ibDateEl.value = todayStr();
   updateIbGoalsDisplay();
   renderInbodyHistory();
@@ -2224,9 +2286,11 @@ function calcGoals(bmr, cilIdx, krokyIdx, aktIdx) {
   const burn = tdee + kd.kcal;
   const kcal = burn + cd.deficit;
   const arr  = loadInbody();
-  // Protein cíl z celkové tělesné hmotnosti (ne ze svalů) — dává realistické hodnoty
-  const vaha = arr.length ? arr[0].vaha : 83;
-  const prot = Math.round(vaha * cd.protMult);
+  // Protein cíl: ze svalové hmoty z InBody (přesné), fallback z těl. hmotnosti
+  const svaly = arr.length && arr[0].svaly ? arr[0].svaly : null;
+  const vaha  = arr.length && arr[0].vaha  ? arr[0].vaha  : 83;
+  const protBase = svaly ? svaly : vaha * 0.35; // ~35% váhy jako odhad svalů bez InBody
+  const prot = Math.round(protBase * cd.protMult);
   return { burn, kcal, prot, deficit: cd.deficit, neat: kd.neat, steps10k: kd.kcal, pal: ad.pal };
 }
 
@@ -2269,8 +2333,9 @@ function applyGoalsFromProfil() {
   const kroky    = p.kroky    ?? 2;
   const aktivita = p.aktivita ?? 0;
   const kd = KROKY_DEFS[kroky];
-  G.neat     = kd.neat;
-  G.steps10k = kd.kcal;
+  G.neat        = kd.neat;
+  G.steps10k    = kd.kcal;
+  G.krokyTarget = kd.kroky;
   // Pokud není InBody, přepočítej BMR z profilu (pohlaví + věk + výška)
   const ibArr = loadInbody();
   if (!ibArr.length && p.vek && p.vyska) {
